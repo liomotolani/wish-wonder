@@ -76,6 +76,11 @@ export const giftInputSchema = z.object({
   priority: z.boolean(),
 });
 
+export const revealSchema = z.object({
+  visitId: z.uuid('That picker visit is not valid.'),
+  number: z.number().int().min(1).max(500),
+});
+
 export const claimSchema = z.object({
   visitId: z.uuid('That picker visit is not valid.'),
   number: z.number().int().min(1).max(500),

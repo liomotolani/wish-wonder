@@ -1,9 +1,11 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { CopyButton } from '@/app/_components/CopyButton';
 import { AlertCircleIcon, KeyIcon } from '@/app/_components/icons';
 import { getAppBaseUrl } from '@/lib/session';
-import { isPersonalTokenFormat } from '@/lib/tokens';
+import { SESSION_COOKIE_NAME, isPersonalTokenFormat } from '@/lib/tokens';
 
 export const metadata: Metadata = {
   title: 'Your personal link',
@@ -11,19 +13,22 @@ export const metadata: Metadata = {
 };
 
 interface PersonalLinkPageProps {
-  searchParams: Promise<{ token?: string | string[]; status?: string | string[] }>;
+  searchParams: Promise<{ status?: string | string[]; created?: string | string[] }>;
 }
 
 export default async function PersonalLinkPage({ searchParams }: PersonalLinkPageProps) {
   const params = await searchParams;
-  const token = typeof params.token === 'string' ? params.token : '';
+  const cookieStore = await cookies();
+  const token = cookieStore.get(SESSION_COOKIE_NAME)?.value ?? '';
 
   if (!isPersonalTokenFormat(token)) {
     redirect('/link-expired');
   }
 
   const isPending = params.status === 'pending';
+  const isCreated = params.created === '1';
   const personalLink = `${await getAppBaseUrl()}/me/${token}`;
+  const continueHref = isPending ? '/pending' : isCreated ? '/start' : '/family';
 
   return (
     <div className="theme-dark min-h-screen bg-pine-900 text-snow">
@@ -54,6 +59,12 @@ export default async function PersonalLinkPage({ searchParams }: PersonalLinkPag
               </p>
             ) : null}
 
+            {isCreated ? (
+              <p className="mt-5 rounded-2xl border border-gold/30 bg-gold/10 px-4 py-3 text-sm font-semibold leading-relaxed text-gold">
+                Next: add your wishes, then invite your family.
+              </p>
+            ) : null}
+
             <div className="mt-7">
               <label htmlFor="personal-link" className="mb-2 block text-sm font-bold text-snow/85">
                 Your personal link
@@ -80,12 +91,12 @@ export default async function PersonalLinkPage({ searchParams }: PersonalLinkPag
             </p>
 
             <div className="mt-auto pt-12">
-              <a
-                href={`/me/${token}`}
+              <Link
+                href={continueHref}
                 className="flex w-full items-center justify-center rounded-full bg-cranberry px-6 py-4 text-base font-bold text-white transition-colors hover:bg-cranberry-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
               >
                 I&apos;ve saved it, continue
-              </a>
+              </Link>
             </div>
           </main>
         </div>

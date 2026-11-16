@@ -1,6 +1,12 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import {
+  Children,
+  cloneElement,
+  isValidElement,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
 import { motion } from 'motion/react';
 import { LIST_CONTAINER, LIST_ITEM, TRANSITION } from './presets';
 
@@ -16,6 +22,7 @@ interface StaggerItemProps {
   children: ReactNode;
   className?: string;
   as?: 'li' | 'tr' | 'div';
+  index?: number;
   [key: `data-${string}`]: string | undefined;
 }
 
@@ -39,6 +46,13 @@ const ITEMS = {
  */
 export function StaggerList({ children, className, as = 'ul' }: StaggerListProps) {
   const Component = CONTAINERS[as];
+  const items = Children.toArray(children).map((child, index) => {
+    if (!isValidElement(child)) {
+      return child;
+    }
+
+    return cloneElement(child as ReactElement<{ index?: number }>, { index });
+  });
 
   return (
     <Component
@@ -47,7 +61,7 @@ export function StaggerList({ children, className, as = 'ul' }: StaggerListProps
       initial="hidden"
       animate="visible"
     >
-      {children}
+      {items}
     </Component>
   );
 }
@@ -56,6 +70,7 @@ export function StaggerItem({
   children,
   className,
   as = 'li',
+  index,
   ...rest
 }: StaggerItemProps) {
   const Component = ITEMS[as];
@@ -64,6 +79,7 @@ export function StaggerItem({
     <Component
       className={className}
       variants={LIST_ITEM}
+      custom={index}
       layout
       transition={TRANSITION.list}
       {...rest}

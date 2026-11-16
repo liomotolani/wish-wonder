@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Snowfall } from '@/app/_components/motion';
 
 interface PageHeaderBandProps {
   title: string;
@@ -18,8 +19,9 @@ export function PageHeaderBand({
   compactTitle = false,
 }: PageHeaderBandProps) {
   return (
-    <header className="relative w-full overflow-hidden rounded-b-[28px] bg-pine-900 text-snow lg:rounded-none">
+    <header className="relative isolate w-full overflow-hidden rounded-b-[28px] bg-pine-900 text-snow lg:rounded-none">
       <span className="snow-dots pointer-events-none absolute inset-0 opacity-70" aria-hidden="true" />
+      <Snowfall variant="header" />
       <div className="relative mx-auto w-full max-w-6xl px-5 pb-8 pt-8 sm:px-8 lg:px-6 lg:pb-10 lg:pt-10">
         {eyebrow ? <div className="mb-5">{eyebrow}</div> : null}
         <div className="flex items-start justify-between gap-4">

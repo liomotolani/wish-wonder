@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { animate, useReducedMotion } from 'motion/react';
 import { Bauble } from '@/app/_components/Bauble';
 import { GiftThumbnail } from '@/app/_components/GiftThumbnail';
-import { DURATION, EASE_OUT, MotionDialog } from '@/app/_components/motion';
+import { MotionDialog, SPRING } from '@/app/_components/motion';
 import {
   AlertCircleIcon,
   CloseIcon,
@@ -70,11 +70,7 @@ export function SecretGiftActions({
       releaseDialog.current?.close();
 
       if (action === 'release' && item && !reduce) {
-        await animate(
-          item,
-          { opacity: 0, scale: 0.98 },
-          { duration: DURATION.feedback, ease: EASE_OUT },
-        );
+        await animate(item, { opacity: 0, scale: 0.98 }, SPRING.pop);
       }
 
       router.refresh();

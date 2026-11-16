@@ -22,6 +22,8 @@ export function useMediaQuery(query: string): boolean {
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
 
+export const LAPTOP_QUERY = '(min-width: 1024px)';
+
 export function useIsLaptop(): boolean {
-  return useMediaQuery('(min-width: 1024px)');
+  return useMediaQuery(LAPTOP_QUERY);
 }

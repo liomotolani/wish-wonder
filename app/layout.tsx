@@ -30,7 +30,8 @@ export default function RootLayout({
         <noscript>
           <style
             dangerouslySetInnerHTML={{
-              __html: '.reveal-prestart{opacity:1 !important}',
+              __html:
+                '.reveal-prestart{opacity:1 !important}.flip-number,.flip-number>span{opacity:1 !important;transform:none !important}',
             }}
           />
         </noscript>

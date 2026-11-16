@@ -6,6 +6,7 @@ import { motion, useReducedMotion } from 'motion/react';
 import { AlertCircleIcon, MinusCircleIcon } from '@/app/_components/icons';
 import { CONFIRMATION } from '@/app/_components/motion';
 import { fireClaimConfetti } from '@/app/_components/motion/celebration';
+import { markBoxTaken } from '@/app/_components/reveal-cache';
 
 interface ClaimGiftButtonProps {
   recipientName: string;
@@ -25,28 +26,40 @@ export function ClaimGiftButton({
   const [state, setState] = useState<ClaimState>('idle');
   const [error, setError] = useState<string | null>(null);
   const reduce = useReducedMotion();
-  const origin = useRef({ x: 0.5, y: 0.6 });
+  const panelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (state !== 'success' || reduce) {
+    if (state !== 'success') {
+      return;
+    }
+
+    const panel = panelRef.current;
+
+    if (panel) {
+      panel.scrollIntoView({
+        behavior: reduce ? 'auto' : 'smooth',
+        block: 'start',
+      });
+      panel.focus({ preventScroll: true });
+    }
+
+    if (reduce) {
       return;
     }
 
     let cancelled = false;
-    void fireClaimConfetti(origin.current, () => cancelled);
+    // Start high in the viewport so the celebration is visible even after the
+    // confirmation panel has been scrolled to the top.
+    void fireClaimConfetti({ x: 0.5, y: 0.28 }, () => cancelled).catch(() => {
+      // A missing celebration must never hide the confirmation.
+    });
 
     return () => {
       cancelled = true;
     };
   }, [state, reduce]);
 
-  async function handleClaim(button: HTMLButtonElement) {
-    const rect = button.getBoundingClientRect();
-    origin.current = {
-      x: (rect.left + rect.width / 2) / window.innerWidth,
-      y: (rect.top + rect.height / 2) / window.innerHeight,
-    };
-
+  async function handleClaim() {
     setState('submitting');
     setError(null);
 
@@ -63,6 +76,7 @@ export function ClaimGiftButton({
       };
 
       if (response.ok && data.ok) {
+        markBoxTaken(visitId, number);
         setState('success');
         return;
       }
@@ -83,10 +97,12 @@ export function ClaimGiftButton({
   if (state === 'success') {
     return (
       <motion.div
+        ref={panelRef}
+        tabIndex={-1}
         variants={CONFIRMATION}
         initial="hidden"
         animate="visible"
-        className="relative overflow-hidden rounded-3xl bg-pine-900 p-6 text-snow"
+        className="relative scroll-mt-4 overflow-hidden rounded-3xl bg-pine-900 p-6 text-snow focus:outline-none"
         role="status"
         aria-live="polite"
       >
@@ -144,7 +160,7 @@ export function ClaimGiftButton({
       <div className="flex flex-col gap-3">
         <button
           type="button"
-          onClick={(event) => void handleClaim(event.currentTarget)}
+          onClick={() => void handleClaim()}
           disabled={state === 'submitting'}
           className="w-full rounded-full bg-cranberry px-6 py-4 text-base font-bold text-white transition-colors hover:bg-cranberry-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pine-900 disabled:cursor-wait disabled:opacity-70"
         >

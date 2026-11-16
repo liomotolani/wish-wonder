@@ -8,57 +8,69 @@ import type { Transition, Variants } from 'motion/react';
 
 type Bezier = [number, number, number, number];
 
-export const EASE_OUT: Bezier = [0.22, 1, 0.36, 1];
-export const EASE_SOFT: Bezier = [0.2, 0.9, 0.3, 1];
+export const EASE_OUT: Bezier = [0.2, 0.9, 0.3, 1];
 export const EASE_IN_OUT: Bezier = [0.65, 0, 0.35, 1];
 
 export const DURATION = {
-  /** Press feedback on tiles and buttons. */
-  press: 0.14,
-  /** Small state changes: toasts, fades, list items. */
+  /** A quick state change: toasts, fades, list items. */
   feedback: 0.2,
   /** A list item settling into place. */
-  list: 0.28,
+  list: 0.18,
   /** Delay between list items. */
-  stagger: 0.045,
-  /** Bottom sheets and dialogs. */
-  sheet: 0.3,
+  stagger: 0.03,
+  /** Only the first eight items stagger; the rest arrive together. */
+  staggerMax: 8,
   /** The one-off gold outline pulse on a Peeked box. */
-  peekPulse: 0.8,
-  peekPulseStep: 0.06,
-  /** The ring that leaves a tapped mystery box. */
-  tapRing: 0.38,
+  peekPulse: 0.6,
+  peekPulseStep: 0.05,
+  /** The jingle-bell shake on a tapped mystery box. */
+  tileShake: 0.2,
+  /** The wrapping-paper sheen that crosses a tile on hover. */
+  glint: 0.45,
+  /** One sparkle in the reveal burst. */
+  sparkle: 0.35,
+  /** Delay between reveal sparkles. */
+  sparkleStep: 0.01,
   reveal: {
-    /** A breath before the box starts to open. */
-    lead: 0.1,
-    /** The tapped tile and the box on the reveal screen. */
-    wiggle: 0.26,
-    /** The lid lifting and tilting away. */
-    lid: 0.55,
+    /** A tiny beat to register the closed box before it moves. */
+    lead: 0.05,
+    /** The box wobble. */
+    wiggle: 0.25,
+    /** The bow starts spinning after the wiggle. */
+    bowDelay: 0.1,
+    /** The ribbon bands slide away once the bow has popped. */
+    ribbonDelay: 0.16,
+    /** The lid springs off after the ribbons. */
+    lidDelay: 0.23,
+    /** Nominal settle for the lid spring. */
+    lid: 0.35,
     /** The gold glow blooming behind the box. */
-    glow: 0.8,
-    /** The "Mystery gift revealed" heading. */
-    heading: 0.4,
-    headingDelay: 0.4,
-    /** The gift card sliding up. */
-    card: 0.55,
-    cardDelay: 0.42,
-    /** When the whole sequence is done and input is fully live. */
-    total: 1.15,
+    glow: 0.4,
+    headingDelay: 0.2,
+    /** The gift card starts 0.3s after the scene mounts. */
+    cardDelay: 0.25,
+    /** Nominal settle for the card spring. */
+    card: 0.35,
+    /** Snowflakes and gold stars start as the lid leaves. */
+    sparkleDelay: 0.25,
+    /** A short settle when the animation is skipped early. */
+    settle: 0.16,
+    /** The whole scene is at rest by 0.8s. */
+    total: 0.8,
   },
 } as const;
 
+/**
+ * The house spring: a small, lively bounce that settles in about 0.35s.
+ * Use it for anything that moves, pops or springs into place.
+ */
 export const SPRING = {
-  press: { type: 'spring', stiffness: 600, damping: 32, mass: 0.6 },
-  soft: { type: 'spring', stiffness: 260, damping: 26, mass: 0.9 },
+  pop: { type: 'spring', stiffness: 420, damping: 26 },
 } satisfies Record<string, Transition>;
 
 export const TRANSITION = {
-  press: { duration: DURATION.press, ease: EASE_OUT },
   feedback: { duration: DURATION.feedback, ease: EASE_OUT },
   list: { duration: DURATION.list, ease: EASE_OUT },
-  sheet: { duration: DURATION.sheet, ease: EASE_OUT },
-  card: { duration: DURATION.reveal.card, ease: EASE_OUT },
 } satisfies Record<string, Transition>;
 
 export const PRESS = {
@@ -69,20 +81,30 @@ export const PRESS = {
 export const STAGGER = {
   delayChildren: 0.02,
   staggerChildren: DURATION.stagger,
+  maxChildren: DURATION.staggerMax,
 } as const;
 
 export const LIST_CONTAINER: Variants = {
   hidden: {},
-  visible: { transition: STAGGER },
+  visible: {},
 };
 
+/**
+ * The delay is capped at the eighth item, so a long list arrives promptly
+ * instead of keeping the user waiting for the tail.
+ */
 export const LIST_ITEM: Variants = {
-  hidden: { opacity: 0, y: 12 },
-  visible: {
+  hidden: { opacity: 0, y: 10 },
+  visible: (index: number = 0) => ({
     opacity: 1,
     y: 0,
-    transition: TRANSITION.list,
-  },
+    transition: {
+      ...TRANSITION.list,
+      delay:
+        STAGGER.delayChildren +
+        Math.min(index, STAGGER.maxChildren - 1) * STAGGER.staggerChildren,
+    },
+  }),
 };
 
 export const FADE_UP: Variants = {
@@ -96,45 +118,113 @@ export const FADE_IN: Variants = {
 };
 
 /**
+ * The sheen that crosses a gift tile on hover. It resets instantly so leaving
+ * and re-entering sweeps the same way every time.
+ */
+export const GLINT: Variants = {
+  rest: { x: '-160%', opacity: 0, rotate: -12, transition: { duration: 0 } },
+  hover: {
+    x: '460%',
+    opacity: [0, 0.55, 0],
+    rotate: -12,
+    transition: { duration: DURATION.glint, ease: EASE_IN_OUT },
+  },
+};
+
+/** Snowflakes and gold stars that burst out of the box as the lid lifts. */
+export const SPARKLE = {
+  count: 14,
+  distance: 84,
+  distanceJitter: 0.55,
+  dotSize: 3.5,
+  starSize: 12,
+  snowflakeSize: 11,
+  /** Fan from upper-left to upper-right. */
+  startAngle: -168,
+  sweep: 156,
+} as const;
+
+/**
  * Dialogs slide up on a phone and fade and scale on a laptop.
  * The backdrop fades in both cases (see `.motion-dialog` in globals.css).
  */
 export const DIALOG_PHONE: Variants = {
-  hidden: { opacity: 0, y: 28, scale: 1 },
-  visible: { opacity: 1, y: 0, scale: 1, transition: TRANSITION.sheet },
+  hidden: { opacity: 0, y: 28, scale: 1, transition: TRANSITION.list },
+  visible: { opacity: 1, y: 0, scale: 1, transition: SPRING.pop },
 };
 
 export const DIALOG_LAPTOP: Variants = {
-  hidden: { opacity: 0, y: 0, scale: 0.97 },
-  visible: { opacity: 1, y: 0, scale: 1, transition: TRANSITION.sheet },
+  hidden: { opacity: 0, y: 0, scale: 0.97, transition: TRANSITION.list },
+  visible: { opacity: 1, y: 0, scale: 1, transition: SPRING.pop },
 };
 
 /** The claim confirmation panel. */
 export const CONFIRMATION: Variants = {
   hidden: { opacity: 0, y: 18, scale: 0.98 },
-  visible: { opacity: 1, y: 0, scale: 1, transition: SPRING.soft },
+  visible: { opacity: 1, y: 0, scale: 1, transition: SPRING.pop },
 };
 
+/**
+ * Snow has two layers: a slow, faint back and a larger, brighter front.
+ * The header variant is the lighter version for pine bands on light screens.
+ */
 export const SNOW = {
-  count: 14,
-  minSize: 2,
-  maxSize: 5,
-  minSpeed: 16,
-  maxSpeed: 38,
-  minOpacity: 0.24,
-  maxOpacity: 0.6,
-  maxSpin: 22,
+  /** Full-screen snow: 45 flakes, split into two layers. */
+  backCount: 30,
+  frontCount: 15,
+  headerBackCount: 9,
+  headerFrontCount: 6,
+  backMinSize: 1.2,
+  backMaxSize: 2.8,
+  frontMinSize: 2.8,
+  frontMaxSize: 5.2,
+  backMinSpeed: 30,
+  backMaxSpeed: 45,
+  frontMinSpeed: 45,
+  frontMaxSpeed: 70,
+  backMinOpacity: 0.35,
+  backMaxOpacity: 0.5,
+  frontMinOpacity: 0.55,
+  frontMaxOpacity: 0.85,
+  headerSizeScale: 0.8,
+  headerSpeedScale: 0.9,
+  headerOpacityScale: 0.85,
+  /** Every nth front flake is a snowflake shape rather than a dot. */
+  snowflakeEvery: 4,
+  headerSnowflakeEvery: 3,
+  /** A few gold stars drift among the flakes. */
+  starCount: 3,
+  starMinSize: 7,
+  starMaxSize: 12,
+  starMinSpeed: 35,
+  starMaxSpeed: 55,
+  starOpacity: 0.75,
+  /** How far a flake sways from side to side, in pixels. */
+  sway: 14,
+  headerSwayScale: 0.6,
+  maxSpin: 30,
+  /** Opacity twinkle range (multiplier of the star's base opacity). */
+  twinkle: 0.35,
 } as const;
 
 export const CONFETTI = {
-  /** Resolved from the Midnight Pine tokens at claim time. */
-  colorVars: ['--color-cranberry', '--color-gold', '--color-snow', '--color-pine-700'],
-  count: 80,
-  spread: 70,
+  /** Cranberry and gold paper pieces. */
+  paperColorVars: ['--color-cranberry', '--color-gold'],
+  /** Gold and snow stars and snowflakes. */
+  goldColorVars: ['--color-gold', '--color-snow'],
+  count: 120,
+  spread: 72,
   startVelocity: 38,
   gravity: 0.9,
-  ticks: 150,
-  scalar: 0.9,
-  secondWaveDelayMs: 160,
-  secondWaveCount: 36,
+  ticks: 160,
+  scalar: 0.95,
+  paperShapes: ['square', 'circle'],
+  secondWaveDelayMs: 120,
+  secondWaveCount: 60,
+  starDelayMs: 190,
+  starCount: 40,
+  starSpread: 110,
+  starVelocity: 34,
+  starGravity: 0.7,
+  starScalar: 1.15,
 } as const;

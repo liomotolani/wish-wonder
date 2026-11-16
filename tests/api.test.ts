@@ -54,12 +54,13 @@ describe('HTTP endpoints', () => {
     };
     expect(data.memberName).toBe('Mum');
     expect(data.personalLink).toMatch(/\/me\/[A-Za-z0-9_-]{43}$/);
-    expect(data.next).toMatch(/^\/personal-link\?token=[A-Za-z0-9_-]{43}$/);
+    expect(data.next).toBe('/personal-link?created=1');
 
     const cookie = response.headers.get('set-cookie') ?? '';
     expect(cookie).toContain('HttpOnly');
     expect(cookie).toContain('SameSite=lax');
     expect(cookie).toContain('Path=/');
+    expect(cookie).toContain('ww_welcome=1');
 
     const token = data.personalLink.split('/').pop();
     expect(token).toBeTruthy();

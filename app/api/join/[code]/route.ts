@@ -5,6 +5,7 @@ import {
   getAppBaseUrlFromRequest,
   isSecureRequest,
   setSessionCookie,
+  setWelcomeCookie,
 } from '@/lib/session';
 import {
   createPersonalToken,
@@ -61,13 +62,15 @@ export async function POST(
     const response = noStoreJson(
       {
         personalLink: `${baseUrl}/me/${token}`,
-        next: `/personal-link?token=${token}&status=${result.memberStatus}`,
+        next: `/personal-link?status=${result.memberStatus}`,
         memberStatus: result.memberStatus,
         familyName: result.familyName,
       },
       { status: 201 },
     );
-    setSessionCookie(response, token, isSecureRequest(request));
+    const secure = isSecureRequest(request);
+    setSessionCookie(response, token, secure);
+    setWelcomeCookie(response, secure);
     return response;
   } catch {
     console.error('Could not join family.');

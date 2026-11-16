@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { POST as revealRoute } from '@/app/api/picker/reveal/route';
 import { createAdminClient } from '@/lib/db/client';
 import {
   getDashboardData,
@@ -73,6 +74,58 @@ describe('surprise protection', () => {
     }
     expectNoClaimLeak(grid);
     expect(json).not.toContain('status');
+  });
+
+  it('prefetches exactly one gift through the reveal route', async () => {
+    const visit = await getOrCreatePickerVisit({
+      buyerMemberId: family.viewers.james.member.id,
+      recipient: { id: family.viewers.sarah.member.id, displayName: 'Sarah' },
+      familyId: family.familyId,
+    });
+
+    expect(visit).not.toBeNull();
+    if (!visit) {
+      return;
+    }
+
+    const response = await revealRoute(
+      new Request('http://localhost/api/picker/reveal', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          cookie: `ww_member=${family.tokens.james}`,
+        },
+        body: JSON.stringify({ visitId: visit.id, number: 1 }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    const data = (await response.json()) as {
+      ok: boolean;
+      recipientName: string;
+      gift: Record<string, unknown>;
+    };
+    expect(data.ok).toBe(true);
+    expect(data.recipientName).toBe('Sarah');
+    expect(Object.keys(data.gift).sort()).toEqual([
+      'description',
+      'imageUrl',
+      'name',
+      'preferences',
+      'pricePence',
+      'priority',
+      'shopUrl',
+    ]);
+    expectNoClaimLeak(data);
+
+    const unauthorised = await revealRoute(
+      new Request('http://localhost/api/picker/reveal', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ visitId: visit.id, number: 1 }),
+      }),
+    );
+    expect(unauthorised.status).toBe(401);
   });
 
   it('reveals exactly one gift and never the list or a claim', async () => {

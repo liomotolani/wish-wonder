@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { animate, useReducedMotion } from 'motion/react';
-import { DURATION, EASE_OUT, PRESS } from './presets';
+import { PRESS, SPRING } from './presets';
 
 const PRESSABLE = 'button:not(:disabled), a[href]';
 /** Components that run their own Motion animation opt out. */
@@ -44,11 +44,7 @@ export function PressFeedback() {
       }
 
       pressed = element;
-      animate(
-        element,
-        { scale: PRESS.scale },
-        { duration: DURATION.press, ease: EASE_OUT },
-      );
+      animate(element, { scale: PRESS.scale }, SPRING.pop);
     }
 
     function release() {
@@ -56,7 +52,7 @@ export function PressFeedback() {
         return;
       }
 
-      animate(pressed, { scale: 1 }, { duration: DURATION.press, ease: EASE_OUT });
+      animate(pressed, { scale: 1 }, SPRING.pop);
       pressed = null;
     }
 
@@ -71,11 +67,7 @@ export function PressFeedback() {
         return;
       }
 
-      animate(
-        element,
-        { y: PRESS.hoverLift },
-        { duration: DURATION.feedback, ease: EASE_OUT },
-      );
+      animate(element, { y: PRESS.hoverLift }, SPRING.pop);
     }
 
     function handlePointerOut(event: PointerEvent) {
@@ -89,7 +81,7 @@ export function PressFeedback() {
         return;
       }
 
-      animate(element, { y: 0 }, { duration: DURATION.feedback, ease: EASE_OUT });
+      animate(element, { y: 0 }, SPRING.pop);
     }
 
     window.addEventListener('pointerdown', handlePointerDown, true);

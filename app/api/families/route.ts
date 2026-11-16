@@ -11,6 +11,7 @@ import {
   getAppBaseUrlFromRequest,
   isSecureRequest,
   setSessionCookie,
+  setWelcomeCookie,
 } from '@/lib/session';
 import {
   createInviteCode,
@@ -46,12 +47,14 @@ export async function POST(request: Request): Promise<NextResponse> {
       const response = noStoreJson(
         {
           personalLink,
-          next: `/personal-link?token=${token}`,
+          next: '/personal-link?created=1',
           memberName: parsed.data.memberName,
         },
         { status: 201 },
       );
-      setSessionCookie(response, token, isSecureRequest(request));
+      const secure = isSecureRequest(request);
+      setSessionCookie(response, token, secure);
+      setWelcomeCookie(response, secure);
       return response;
     } catch (error) {
       if (isUniqueViolation(error)) {

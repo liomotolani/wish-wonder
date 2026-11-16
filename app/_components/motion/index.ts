@@ -6,17 +6,20 @@ export {
   DURATION,
   EASE_IN_OUT,
   EASE_OUT,
-  EASE_SOFT,
   FADE_IN,
   FADE_UP,
+  GLINT,
   LIST_CONTAINER,
   LIST_ITEM,
   PRESS,
   SNOW,
+  SPARKLE,
   SPRING,
   STAGGER,
   TRANSITION,
 } from './presets';
+export { SnowflakeMark, SparkleStar } from './Sparkle';
+export { FlipNumber } from './FlipNumber';
 export { MotionProvider } from './MotionProvider';
 export { useIsLaptop, useMediaQuery } from './useMediaQuery';
 export { Snowfall } from './Snowfall';

@@ -55,7 +55,7 @@ export function AddManagedMemberForm() {
           maxLength={40}
           value={displayName}
           onChange={(event) => setDisplayName(event.target.value)}
-          placeholder="Baby Leo"
+          placeholder="e.g. Baby Leo"
           className="w-full rounded-2xl border border-pine-100 bg-white px-4 py-3.5 text-base text-ink placeholder:text-muted focus:border-pine-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pine-900"
         />
         <p className="mt-2 text-sm leading-relaxed text-muted">

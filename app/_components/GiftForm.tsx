@@ -160,7 +160,11 @@ export function GiftForm({
         return;
       }
 
+      // The API revalidates the server views, but the App Router can still
+      // hold the prefetched wishlist page. Refresh after navigating so the
+      // new gift is there immediately.
       router.push(returnHref);
+      router.refresh();
     } catch {
       setError('We could not reach the server. Check your connection and try again.');
     } finally {
@@ -186,6 +190,7 @@ export function GiftForm({
       }
 
       router.push(returnHref);
+      router.refresh();
     } catch {
       setError('We could not reach the server. Check your connection and try again.');
     } finally {
@@ -279,7 +284,7 @@ export function GiftForm({
           maxLength={120}
           value={name}
           onChange={(event) => setName(event.target.value)}
-          placeholder="Nike Air Max Trainers"
+          placeholder="e.g. Nike Air Max Trainers"
           className={INPUT_CLASS}
         />
       </div>
@@ -295,7 +300,7 @@ export function GiftForm({
           maxLength={600}
           value={description}
           onChange={(event) => setDescription(event.target.value)}
-          placeholder="The classic ones, for everyday wear"
+          placeholder="e.g. The classic ones, for everyday wear"
           className={`${INPUT_CLASS} resize-y`}
         />
       </div>
@@ -312,7 +317,7 @@ export function GiftForm({
             inputMode="decimal"
             value={price}
             onChange={(event) => setPrice(event.target.value)}
-            placeholder="95"
+            placeholder="e.g. 95"
             className={INPUT_CLASS}
           />
         </div>
@@ -327,7 +332,7 @@ export function GiftForm({
             maxLength={40}
             value={size}
             onChange={(event) => setSize(event.target.value)}
-            placeholder="6"
+            placeholder="e.g. 6"
             className={INPUT_CLASS}
           />
         </div>
@@ -345,7 +350,7 @@ export function GiftForm({
             maxLength={40}
             value={colour}
             onChange={(event) => setColour(event.target.value)}
-            placeholder="Black"
+            placeholder="e.g. Black"
             className={INPUT_CLASS}
           />
         </div>
@@ -360,7 +365,7 @@ export function GiftForm({
             maxLength={100}
             value={model}
             onChange={(event) => setModel(event.target.value)}
-            placeholder="Air Max 90"
+            placeholder="e.g. Air Max 90"
             className={INPUT_CLASS}
           />
         </div>
@@ -377,7 +382,7 @@ export function GiftForm({
           maxLength={500}
           value={shopUrl}
           onChange={(event) => setShopUrl(event.target.value)}
-          placeholder="https://www.nike.com/gb/…"
+          placeholder="e.g. https://www.nike.com/gb/…"
           className={INPUT_CLASS}
         />
       </div>

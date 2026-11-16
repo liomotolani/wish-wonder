@@ -3,6 +3,8 @@ import { createHash, randomBytes } from 'node:crypto';
 
 export const SESSION_COOKIE_NAME = 'ww_member';
 export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
+export const WELCOME_COOKIE_NAME = 'ww_welcome';
+export const WELCOME_MAX_AGE_SECONDS = 30 * 60;
 export const DEVICE_LINK_TTL_SECONDS = 15 * 60;
 export const TOKEN_PATTERN = /^[A-Za-z0-9_-]{43}$/;
 

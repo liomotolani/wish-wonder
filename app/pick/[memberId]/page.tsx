@@ -217,6 +217,7 @@ export default async function PickerPage({ params, searchParams }: PickerPagePro
                         <MysteryTile
                           number={box.number}
                           state={box.state}
+                          visitId={visit.id}
                           href={
                             box.state === 'taken'
                               ? undefined

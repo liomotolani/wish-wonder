@@ -43,14 +43,8 @@ export function JoinFamilyForm({
         return;
       }
 
-      if (data.next) {
-        router.push(data.next);
-        return;
-      }
-
-      const token = new URL(data.personalLink).pathname.split('/').filter(Boolean).pop() ?? '';
       const status = data.memberStatus === 'pending' ? 'pending' : 'active';
-      router.push(`/personal-link?token=${token}&status=${status}`);
+      router.push(data.next ?? `/personal-link?status=${status}`);
     } catch {
       setError('We could not reach the server. Check your connection and try again.');
     } finally {
@@ -72,7 +66,7 @@ export function JoinFamilyForm({
           maxLength={40}
           value={memberName}
           onChange={(event) => setMemberName(event.target.value)}
-          placeholder="James"
+          placeholder="e.g. James"
           autoComplete="given-name"
           className="w-full rounded-2xl border border-snow/25 bg-snow/10 px-5 py-3.5 text-base text-snow placeholder:text-snow/60 focus:border-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
         />

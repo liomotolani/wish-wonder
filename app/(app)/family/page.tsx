@@ -1,13 +1,15 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { cookies } from 'next/headers';
 import { getAppBaseUrl, getViewer, requireViewer } from '@/lib/session';
 import { daysUntilChristmas } from '@/lib/dates';
+import { WELCOME_COOKIE_NAME } from '@/lib/tokens';
 import { getDashboardData } from '@/lib/db/dashboard';
 import { Bauble } from '@/app/_components/Bauble';
 import { ApproveMemberButton } from '@/app/_components/ApproveMemberButton';
 import { ShareFamilyLink } from '@/app/_components/CopyButton';
 import { NoActiveEventNotice } from '@/app/_components/NoActiveEventNotice';
-import { StaggerItem, StaggerList } from '@/app/_components/motion';
+import { FlipNumber, Snowfall, StaggerItem, StaggerList } from '@/app/_components/motion';
 import {
   ArrowRightIcon,
   DeviceIcon,
@@ -32,6 +34,8 @@ export default async function FamilyPage() {
   const viewer = await requireViewer();
   const data = await getDashboardData(viewer);
   const days = daysUntilChristmas();
+  const firstVisit =
+    (await cookies()).get(WELCOME_COOKIE_NAME)?.value === '1';
   const inviteUrl = `${await getAppBaseUrl()}/join/${viewer.family.inviteCode}`;
   const isOrganiser = viewer.family.organiserMemberId === viewer.member.id;
   const familyLabel =
@@ -42,15 +46,16 @@ export default async function FamilyPage() {
 
   return (
     <main id="main">
-      <section className="relative overflow-hidden rounded-b-[28px] bg-pine-900 text-snow lg:mx-auto lg:mt-8 lg:max-w-6xl lg:rounded-[28px]">
+      <section className="relative isolate overflow-hidden rounded-b-[28px] bg-pine-900 text-snow lg:mx-auto lg:mt-8 lg:max-w-6xl lg:rounded-[28px]">
         <span
           className="snow-dots pointer-events-none absolute inset-0 opacity-70"
           aria-hidden="true"
         />
+        <Snowfall variant="header" />
         <div className="relative px-5 pb-7 pt-8 sm:px-8 lg:px-10 lg:py-9">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-sm text-snow/65">Welcome back</p>
+              <p className="text-sm text-snow/65">{firstVisit ? 'Welcome' : 'Welcome back'}</p>
               <h1 className="mt-1 text-3xl font-extrabold tracking-tight sm:text-4xl">
                 Hi, {viewer.member.displayName}
               </h1>
@@ -77,9 +82,10 @@ export default async function FamilyPage() {
 
           <div className="mt-3 flex items-center justify-between gap-4">
             <p className="flex items-baseline gap-3">
-              <span className="text-6xl font-extrabold leading-none tracking-[-0.05em] text-snow sm:text-7xl">
-                {days}
-              </span>
+              <FlipNumber
+                value={days}
+                className="text-6xl font-extrabold leading-none tracking-[-0.05em] text-snow sm:text-7xl"
+              />
               <span className="max-w-[9rem] text-base leading-tight text-snow/65 sm:text-lg">
                 {days === 0 ? 'Christmas Day is here' : 'days until Christmas Day'}
               </span>
@@ -119,26 +125,39 @@ export default async function FamilyPage() {
         </div>
       </section>
 
-      {!viewer.event ? (
-        <div className="mx-auto w-full max-w-6xl px-4 pt-5 sm:px-8 lg:px-6">
-          <NoActiveEventNotice canManage={isOrganiser} />
-        </div>
-      ) : null}
+      {data.pendingMembers.length > 0 ? (
+        <section
+          aria-labelledby="pending-members-heading"
+          className="mx-auto w-full max-w-6xl px-4 pt-5 sm:px-8 lg:px-6"
+        >
+          <div className="rounded-2xl border border-gold/50 bg-gold-100/80 p-4 shadow-sm sm:p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2
+                  id="pending-members-heading"
+                  className="text-base font-extrabold text-ink"
+                >
+                  {data.pendingMembers.length === 1
+                    ? '1 person waiting to join'
+                    : `${data.pendingMembers.length} people waiting to join`}
+                </h2>
+                <p className="mt-1 text-sm leading-relaxed text-muted">
+                  {data.pendingMembers.length === 1
+                    ? `${data.pendingMembers[0].displayName} would like to join the family.`
+                    : 'Approve them so they can add their wishes and join in.'}
+                </p>
+              </div>
+              {data.pendingMembers.length === 1 ? (
+                <ApproveMemberButton
+                  memberId={data.pendingMembers[0].id}
+                  displayName={data.pendingMembers[0].displayName}
+                  label="Approve"
+                />
+              ) : null}
+            </div>
 
-      <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-8 lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start lg:gap-8 lg:px-6 lg:py-8">
-        <div className="order-2 lg:order-1">
-          {data.pendingMembers.length > 0 ? (
-            <section
-              aria-labelledby="pending-members-heading"
-              className="mb-5 rounded-2xl border border-gold/50 bg-gold-100/70 p-4 sm:p-5"
-            >
-              <h2 id="pending-members-heading" className="text-base font-extrabold text-ink">
-                Waiting to join
-              </h2>
-              <p className="mt-1 text-sm leading-relaxed text-muted">
-                Let them in when you know who they are.
-              </p>
-              <StaggerList className="mt-3 space-y-2">
+            {data.pendingMembers.length > 1 ? (
+              <StaggerList className="mt-4 space-y-2">
                 {data.pendingMembers.map((member) => (
                   <StaggerItem
                     key={member.id}
@@ -151,14 +170,25 @@ export default async function FamilyPage() {
                     <ApproveMemberButton
                       memberId={member.id}
                       displayName={member.displayName}
+                      label="Approve"
                     />
                   </StaggerItem>
                 ))}
               </StaggerList>
-            </section>
-          ) : null}
+            ) : null}
+          </div>
+        </section>
+      ) : null}
 
-          <div className="mt-2 flex items-center justify-between gap-3 lg:mt-0">
+      {!viewer.event ? (
+        <div className="mx-auto w-full max-w-6xl px-4 pt-5 sm:px-8 lg:px-6">
+          <NoActiveEventNotice canManage={isOrganiser} />
+        </div>
+      ) : null}
+
+      <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-8 lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start lg:gap-8 lg:px-6 lg:py-8">
+        <div className="order-2 lg:order-1">
+          <div className="flex items-center justify-between gap-3 lg:mt-0">
             <h2 className="text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">
               Who are you buying for?
             </h2>
@@ -231,7 +261,7 @@ export default async function FamilyPage() {
         <div className="order-1 mt-6 grid grid-cols-2 gap-3 lg:order-2 lg:mt-0 lg:grid-cols-1 lg:gap-4">
           <Link
             href="/wishlist"
-            className="group rounded-2xl border border-pine-100 bg-white p-4 shadow-sm transition-colors hover:border-pine-700/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pine-900 sm:p-5 lg:hidden"
+            className="rounded-2xl border border-pine-100 bg-white p-4 shadow-sm transition-colors hover:border-pine-700/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pine-900 sm:p-5 lg:hidden"
           >
             <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-cranberry/10 text-cranberry-ink">
               <GiftIcon className="h-5 w-5" />
@@ -240,14 +270,11 @@ export default async function FamilyPage() {
             <span className="mt-0.5 block text-sm text-muted">
               {data.ownGiftCount === 1 ? '1 wish' : `${data.ownGiftCount} wishes`}
             </span>
-            <span className="mt-3 hidden text-sm font-semibold text-pine-700 group-hover:underline lg:block">
-              Edit my list
-            </span>
           </Link>
 
           <Link
             href="/secret-gifts"
-            className="group rounded-2xl border border-gold/40 bg-gold-100/70 p-4 shadow-sm transition-colors hover:border-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pine-900 sm:p-5 lg:hidden"
+            className="rounded-2xl border border-gold/40 bg-gold-100/70 p-4 shadow-sm transition-colors hover:border-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pine-900 sm:p-5 lg:hidden"
           >
             <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white text-gold-ink">
               <LockIcon className="h-5 w-5" />
@@ -257,9 +284,6 @@ export default async function FamilyPage() {
               {data.reservedCount + data.purchasedCount === 1
                 ? '1 claimed'
                 : `${data.reservedCount + data.purchasedCount} claimed`}
-            </span>
-            <span className="mt-3 hidden text-sm font-semibold text-gold-ink group-hover:underline lg:block">
-              Only you can see these
             </span>
           </Link>
 
@@ -287,10 +311,10 @@ export default async function FamilyPage() {
               <p className="mt-3 text-sm text-muted">Your list is waiting for its first wish.</p>
             )}
             <Link
-              href="/wishlist"
+              href={data.ownGiftCount > 0 ? '/wishlist' : '/wishlist/new'}
               className="mt-4 inline-flex min-h-11 items-center gap-1 text-sm font-bold text-pine-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pine-900"
             >
-              Edit my list
+              {data.ownGiftCount > 0 ? 'Edit my list' : 'Add your first wish'}
               <ArrowRightIcon className="h-4 w-4" />
             </Link>
           </div>

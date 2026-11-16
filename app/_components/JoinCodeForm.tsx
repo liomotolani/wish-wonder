@@ -34,7 +34,7 @@ export function JoinCodeForm() {
         required
         value={value}
         onChange={(event) => setValue(event.target.value)}
-        placeholder="wishandwonder.app/join/0a1b2c3d4e5f6a7b"
+        placeholder="e.g. wishandwonder.app/join/0a1b2c3d4e5f6a7b"
         className="w-full rounded-2xl border border-snow/25 bg-snow/10 px-5 py-3.5 text-base text-snow placeholder:text-snow/60 focus:border-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
       />
       <p className="mt-2 text-sm text-snow/60">

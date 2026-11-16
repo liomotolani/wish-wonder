@@ -42,13 +42,7 @@ export function CreateFamilyForm({ initialRequiresApproval = true }: CreateFamil
         return;
       }
 
-      if (data.next) {
-        router.push(data.next);
-        return;
-      }
-
-      const token = new URL(data.personalLink).pathname.split('/').filter(Boolean).pop() ?? '';
-      router.push(`/personal-link?token=${token}`);
+      router.push(data.next ?? '/personal-link?created=1');
     } catch {
       setError('We could not reach the server. Check your connection and try again.');
     } finally {
@@ -71,7 +65,7 @@ export function CreateFamilyForm({ initialRequiresApproval = true }: CreateFamil
             maxLength={80}
             value={familyName}
             onChange={(event) => setFamilyName(event.target.value)}
-            placeholder="The Williams Family Christmas 2026"
+            placeholder="e.g. The Williams Family Christmas 2026"
             className={INPUT_CLASS}
             autoComplete="organization"
           />
@@ -89,7 +83,7 @@ export function CreateFamilyForm({ initialRequiresApproval = true }: CreateFamil
             maxLength={40}
             value={memberName}
             onChange={(event) => setMemberName(event.target.value)}
-            placeholder="Mum"
+            placeholder="e.g. Mum"
             className={INPUT_CLASS}
             autoComplete="given-name"
           />

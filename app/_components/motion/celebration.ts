@@ -7,29 +7,66 @@ interface Origin {
   y: number;
 }
 
-function readColours(): string[] {
+/** A 24x24 five-point star and six-point snowflake, scaled to 10px by canvas. */
+const STAR_PATH =
+  'M12 1.5 14.8 8.6 22.4 9.2 16.5 13.9 18.4 21.2 12 17 5.6 21.2 7.5 13.9 1.6 9.2 9.2 8.6Z';
+const SNOWFLAKE_PATH =
+  'M12 1 14.25 8.1 21.5 6.5 16.5 12 21.5 17.5 14.25 15.9 12 23 9.75 15.9 2.5 17.5 7.5 12 2.5 6.5 9.75 8.1Z';
+
+type ConfettiFunction = typeof import('canvas-confetti');
+type ConfettiModule = { default: ConfettiFunction };
+
+let confettiModule: Promise<ConfettiModule> | null = null;
+
+function loadConfetti(): Promise<ConfettiModule> {
+  confettiModule ??= import('canvas-confetti');
+  return confettiModule;
+}
+
+/** Warm the confetti module while the reveal is on screen. */
+export function preloadClaimConfetti(): void {
+  void loadConfetti().catch(() => {
+    // The claim still works if the celebration module cannot load.
+  });
+}
+
+function readColours(names: readonly string[]): string[] {
   const styles = getComputedStyle(document.documentElement);
 
-  return CONFETTI.colorVars.map((name) => styles.getPropertyValue(name).trim()).filter(
-    Boolean,
-  );
+  return names.map((name) => styles.getPropertyValue(name).trim()).filter(Boolean);
 }
 
 /**
- * A short cranberry, gold, white and pine burst. canvas-confetti is loaded
- * only when someone actually claims a gift. Reduced motion disables it.
+ * A short paper burst with a gold-and-white star and snowflake flourish.
+ * canvas-confetti is loaded only when someone actually claims a gift.
+ * Reduced motion disables it.
  */
 export async function fireClaimConfetti(
   origin: Origin,
   isCancelled: () => boolean = () => false,
 ): Promise<void> {
-  const { default: confetti } = await import('canvas-confetti');
+  const { default: confetti } = await loadConfetti();
 
   if (isCancelled()) {
     return;
   }
 
-  const colors = readColours();
+  function makeShape(path: string, fallback: 'star' | 'circle') {
+    try {
+      // Supplying the matrix skips canvas-confetti's slow path scan.
+      const scale = 10 / 24;
+      const matrix = new DOMMatrix([scale, 0, 0, scale, -5, -5]);
+
+      return confetti.shapeFromPath({ path, matrix });
+    } catch {
+      return fallback;
+    }
+  }
+
+  const starShape = makeShape(STAR_PATH, 'star');
+  const snowflakeShape = makeShape(SNOWFLAKE_PATH, 'circle');
+  const paperColors = readColours(CONFETTI.paperColorVars);
+  const goldColors = readColours(CONFETTI.goldColorVars);
 
   confetti({
     particleCount: CONFETTI.count,
@@ -38,8 +75,9 @@ export async function fireClaimConfetti(
     gravity: CONFETTI.gravity,
     ticks: CONFETTI.ticks,
     scalar: CONFETTI.scalar,
+    shapes: [...CONFETTI.paperShapes],
     origin,
-    colors,
+    colors: paperColors,
     disableForReducedMotion: true,
   });
 
@@ -55,9 +93,30 @@ export async function fireClaimConfetti(
       gravity: CONFETTI.gravity,
       ticks: CONFETTI.ticks,
       scalar: CONFETTI.scalar,
+      shapes: [...CONFETTI.paperShapes],
       origin: { x: origin.x, y: origin.y - 0.08 },
-      colors,
+      colors: paperColors,
       disableForReducedMotion: true,
     });
   }, CONFETTI.secondWaveDelayMs);
+
+  // Gold and white stars and snowflakes on top of the paper pieces.
+  window.setTimeout(() => {
+    if (isCancelled()) {
+      return;
+    }
+
+    confetti({
+      particleCount: CONFETTI.starCount,
+      spread: CONFETTI.starSpread,
+      startVelocity: CONFETTI.starVelocity,
+      gravity: CONFETTI.starGravity,
+      ticks: CONFETTI.ticks,
+      scalar: CONFETTI.starScalar,
+      shapes: [starShape, snowflakeShape],
+      origin: { x: origin.x, y: origin.y - 0.12 },
+      colors: goldColors,
+      disableForReducedMotion: true,
+    });
+  }, CONFETTI.starDelayMs);
 }

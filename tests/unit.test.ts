@@ -13,6 +13,7 @@ import {
   poundsToPence,
   penceToPoundsInput,
 } from '@/lib/validation';
+import { DURATION, SPARKLE } from '@/app/_components/motion/presets';
 
 describe('prices and copy helpers', () => {
   it('formats whole pounds without pence', () => {
@@ -48,6 +49,36 @@ describe('prices and copy helpers', () => {
       'Air Max',
     ]);
     expect(preferenceChips(null)).toEqual([]);
+  });
+});
+
+describe('reveal timing', () => {
+  it('starts without a visible pause', () => {
+    expect(DURATION.reveal.lead).toBeLessThanOrEqual(0.05);
+  });
+
+  it('lets every sparkle finish before the scene settles', () => {
+    const lastSparkleEnd =
+      DURATION.reveal.lead +
+      DURATION.reveal.sparkleDelay +
+      (SPARKLE.count - 1) * DURATION.sparkleStep +
+      DURATION.sparkle;
+
+    expect(lastSparkleEnd).toBeLessThanOrEqual(DURATION.reveal.total);
+  });
+
+  it('lets the gift card and lid settle before the scene budget', () => {
+    const cardEnd =
+      DURATION.reveal.lead + DURATION.reveal.cardDelay + DURATION.reveal.card;
+    const lidEnd =
+      DURATION.reveal.lead + DURATION.reveal.lidDelay + DURATION.reveal.lid;
+
+    expect(cardEnd).toBeLessThanOrEqual(DURATION.reveal.total);
+    expect(lidEnd).toBeLessThanOrEqual(DURATION.reveal.total);
+  });
+
+  it('answers a tile tap inside a quarter of a second', () => {
+    expect(DURATION.tileShake).toBeLessThanOrEqual(0.25);
   });
 });
 

@@ -7,6 +7,8 @@ import { getViewerByToken } from '@/lib/auth';
 import {
   SESSION_COOKIE_NAME,
   SESSION_MAX_AGE_SECONDS,
+  WELCOME_COOKIE_NAME,
+  WELCOME_MAX_AGE_SECONDS,
 } from '@/lib/tokens';
 import type { Viewer } from '@/lib/types';
 
@@ -153,5 +155,21 @@ export function setSessionCookie(
     sameSite: 'lax',
     path: '/',
     maxAge: SESSION_MAX_AGE_SECONDS,
+  });
+}
+
+/** Mark the next dashboard visit as a first visit. */
+export function setWelcomeCookie(
+  response: NextResponse,
+  secure: boolean = process.env.NODE_ENV === 'production',
+): void {
+  response.cookies.set({
+    name: WELCOME_COOKIE_NAME,
+    value: '1',
+    httpOnly: true,
+    secure,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: WELCOME_MAX_AGE_SECONDS,
   });
 }

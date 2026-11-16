@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { GiftIcon } from '@/app/_components/icons';
 
 interface LogoProps {
   href?: string;
@@ -16,11 +15,23 @@ export function Logo({ href = '/', tone = 'dark', size = 'md' }: LogoProps) {
       className="inline-flex min-h-11 items-center gap-2.5 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold"
     >
       <span
-        className={`inline-flex items-center justify-center rounded-xl bg-gold text-pine-900 ${
-          size === 'sm' ? 'h-8 w-8' : 'h-9 w-9'
-        }`}
+        aria-hidden="true"
+        className={`inline-flex shrink-0 ${size === 'sm' ? 'h-8 w-8' : 'h-9 w-9'}`}
       >
-        <GiftIcon className={size === 'sm' ? 'h-4 w-4' : 'h-5 w-5'} />
+        <svg viewBox="0 0 64 64" className="h-full w-full">
+          <rect width="64" height="64" rx="14" className="fill-cranberry" />
+          <rect x="42" y="0" width="8" height="64" className="fill-gold" />
+          <rect x="0" y="18" width="64" height="8" className="fill-gold" />
+          <path
+            d="M13.5 38.5c0-6 4-9.5 8.5-9.5s8.5 3.2 8.5 8.4c0 5.6-6.6 6.4-8.5 10.6v1.4"
+            fill="none"
+            stroke="#FFFFFF"
+            strokeWidth="5.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <circle cx="22" cy="57" r="3.5" fill="#FFFFFF" />
+        </svg>
       </span>
       <span
         className={`font-extrabold tracking-tight ${
