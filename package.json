@@ -1,0 +1,39 @@
+{
+  "name": "wish-and-wonder",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --webpack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.119.0",
+    "canvas-confetti": "^1.9.4",
+    "motion": "^14.14.0",
+    "next": "16.4.6",
+    "qrcode": "^1.5.4",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "server-only": "^0.0.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.5",
+    "@tailwindcss/turbopack": "4.3.3",
+    "@types/canvas-confetti": "^1.9.0",
+    "@types/node": "^22",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.4.6",
+    "postcss": "^8.5.33",
+    "supabase": "^3.1.0",
+    "tailwindcss": "4.3.3",
+    "typescript": "^5",
+    "vitest": "^5.1.0"
+  }
+}

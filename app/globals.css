@@ -1,0 +1,95 @@
+@import "tailwindcss";
+
+@theme {
+  --color-pine-900: #0B231B;
+  --color-pine-700: #14402F;
+  --color-pine-100: #E4EEE8;
+
+  --color-cranberry: #D23A4E;
+  --color-cranberry-ink: #B42A3E;
+
+  --color-gold: #E9C46A;
+  --color-gold-100: #FAF0D3;
+  --color-gold-ink: #6B4E0B;
+
+  --color-snow: #F6F4EF;
+  --color-ink: #10201A;
+  --color-muted: #5B6B63;
+
+  --font-sans: var(--font-plus-jakarta-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--color-snow);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-pine-900);
+  outline-offset: 2px;
+}
+
+.theme-dark :focus-visible {
+  outline-color: var(--color-gold);
+}
+
+/* Static snowy dots used on the deep pine surfaces. */
+.snow-dots {
+  background-image: radial-gradient(rgba(228, 238, 232, 0.22) 1.5px, transparent 1.5px);
+  background-size: 22px 22px;
+}
+
+.snow-dots-soft {
+  background-image: radial-gradient(rgba(228, 238, 232, 0.14) 1.5px, transparent 1.5px);
+  background-size: 26px 26px;
+}
+
+/* The soft gold bloom behind the opening gift box. Opacity is animated by Motion. */
+.reveal-glow-surface {
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--color-gold) 34%, transparent) 0%,
+    color-mix(in srgb, var(--color-cranberry) 16%, transparent) 45%,
+    transparent 72%
+  );
+}
+
+/*
+ * The reveal is server-rendered with inline opacity 0 on its animated parts,
+ * so the first paint already shows the pre-reveal state and Motion takes over
+ * without a flash. The <noscript> rule in the root layout restores it when JS
+ * is unavailable.
+ */
+
+/*
+ * Dialogs are animated by Motion (see app/_components/motion).
+ * Only the native backdrop is CSS, because pseudo-elements cannot be
+ * targeted by Motion. Keep the durations in step with presets.ts.
+ */
+.motion-dialog[open]::backdrop {
+  animation: backdrop-fade 300ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes backdrop-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .motion-dialog[open]::backdrop {
+    animation: none;
+  }
+}

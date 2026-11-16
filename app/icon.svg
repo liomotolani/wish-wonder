@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Wish &amp; Wonder gift">
+  <rect width="64" height="64" rx="14" fill="#E9C46A" />
+  <g fill="none" stroke="#0B231B" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="13" y="27" width="38" height="27" rx="4" />
+    <rect x="10" y="19" width="44" height="11" rx="2.5" />
+    <path d="M32 19v35" />
+    <path d="M32 19c-4.5-8.5-14-7-14-1.2 0 4.4 7.5 5.4 14 1.2Z" />
+    <path d="M32 19c4.5-8.5 14-7 14-1.2 0 4.4-7.5 5.4-14 1.2Z" />
+  </g>
+</svg>
