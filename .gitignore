@@ -44,3 +44,6 @@ next-env.d.ts
 
 # local Supabase CLI state (contains local dev secrets)
 supabase/.temp
+
+docs/
+.agents/
