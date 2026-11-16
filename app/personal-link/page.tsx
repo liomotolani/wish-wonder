@@ -13,11 +13,30 @@ export const metadata: Metadata = {
 };
 
 interface PersonalLinkPageProps {
-  searchParams: Promise<{ status?: string | string[]; created?: string | string[] }>;
+  searchParams: Promise<{
+    status?: string | string[];
+    created?: string | string[];
+    token?: string | string[];
+  }>;
 }
 
 export default async function PersonalLinkPage({ searchParams }: PersonalLinkPageProps) {
   const params = await searchParams;
+
+  // Old links used to carry the token here. Strip it before anything renders,
+  // so opening a stale history entry does not keep the token in the address bar.
+  if (params.token !== undefined) {
+    const query = new URLSearchParams();
+    if (params.status === 'pending') {
+      query.set('status', 'pending');
+    }
+    if (params.created === '1') {
+      query.set('created', '1');
+    }
+    const suffix = query.toString();
+    redirect(`/personal-link${suffix ? `?${suffix}` : ''}`);
+  }
+
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE_NAME)?.value ?? '';
 
