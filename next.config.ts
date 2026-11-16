@@ -30,8 +30,8 @@ const nextConfig: NextConfig = {
   },
   images: {
     remotePatterns: [
-      { protocol: "https", hostname: "**" },
-      { protocol: "http", hostname: "**" },
+      { protocol: "https", hostname: "https://pcdumiuaswlzspgfyadh.supabase.co" },
+      { protocol: "http", hostname: "https://pcdumiuaswlzspgfyadh.supabase.co" },
     ],
   },
 };
