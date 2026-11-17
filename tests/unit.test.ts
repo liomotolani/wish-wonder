@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   daysUntilChristmas,
   christmasYear,
+  londonDateKey,
+  msUntilNextLondonMidnight,
 } from '@/lib/dates';
 import {
   formatPrice,
@@ -14,6 +16,12 @@ import {
   penceToPoundsInput,
 } from '@/lib/validation';
 import { DURATION, SPARKLE } from '@/app/_components/motion/presets';
+import {
+  countdownAccessibleLabel,
+  countdownLabel,
+  countdownMilestone,
+  rollSequence,
+} from '@/lib/countdown';
 
 describe('prices and copy helpers', () => {
   it('formats whole pounds without pence', () => {
@@ -94,6 +102,48 @@ describe('Christmas countdown', () => {
   it('counts to next Christmas from Boxing Day', () => {
     expect(daysUntilChristmas(new Date('2026-12-26T12:00:00Z'))).toBe(364);
     expect(christmasYear(new Date('2026-12-26T12:00:00Z'))).toBe(2027);
+  });
+
+  it('keys days by the London calendar, not UTC', () => {
+    expect(londonDateKey(new Date('2026-11-17T00:30:00Z'))).toBe('2026-11-17');
+    expect(londonDateKey(new Date('2026-07-01T23:30:00Z'))).toBe('2026-07-02');
+  });
+
+  it('waits until London midnight through both GMT and BST', () => {
+    expect(msUntilNextLondonMidnight(new Date('2026-11-17T12:00:00Z'))).toBe(12 * 60 * 60 * 1000);
+    expect(msUntilNextLondonMidnight(new Date('2026-07-01T12:00:00Z'))).toBe(11 * 60 * 60 * 1000);
+    expect(msUntilNextLondonMidnight(new Date('2026-11-17T23:59:30Z'))).toBe(30 * 1000);
+  });
+});
+
+describe('countdown board', () => {
+  it('rolls down through odd values before landing', () => {
+    expect(rollSequence(38)).toEqual([45, 43, 41, 39, 38]);
+  });
+
+  it('lands on the real day from a single digit too', () => {
+    const sequence = rollSequence(7);
+    expect(sequence.at(-1)).toBe(7);
+    expect(sequence.length).toBeGreaterThan(1);
+  });
+
+  it('adds the milestone copy under the number', () => {
+    expect(countdownMilestone(25)).toBeNull();
+    expect(countdownMilestone(24)).toBe('Advent is here');
+    expect(countdownMilestone(8)).toBe('Advent is here');
+    expect(countdownMilestone(7)).toBe('One week to go!');
+    expect(countdownMilestone(3)).toBe('One week to go!');
+    expect(countdownMilestone(2)).toBe('Christmas Eve tomorrow!');
+    expect(countdownMilestone(1)).toBe("It's Christmas Eve!");
+    expect(countdownMilestone(0)).toBeNull();
+  });
+
+  it('names the countdown once for screen readers', () => {
+    expect(countdownAccessibleLabel(38)).toBe('38 days until Christmas');
+    expect(countdownAccessibleLabel(1)).toBe('1 day until Christmas');
+    expect(countdownAccessibleLabel(0)).toBe("It's Christmas Day");
+    expect(countdownLabel(1)).toBe('day until Christmas Day');
+    expect(countdownLabel(0)).toBe("It's Christmas Day!");
   });
 });
 

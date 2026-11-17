@@ -1,6 +1,6 @@
 'use client';
 
-import { CONFETTI } from './presets';
+import { CONFETTI, COUNTDOWN } from './presets';
 
 interface Origin {
   x: number;
@@ -36,6 +36,46 @@ function readColours(names: readonly string[]): string[] {
   return names.map((name) => styles.getPropertyValue(name).trim()).filter(Boolean);
 }
 
+function makeShape(
+  confetti: ConfettiFunction,
+  path: string,
+  fallback: 'star' | 'circle',
+) {
+  try {
+    // Supplying the matrix skips canvas-confetti's slow path scan.
+    const scale = 10 / 24;
+    const matrix = new DOMMatrix([scale, 0, 0, scale, -5, -5]);
+
+    return confetti.shapeFromPath({ path, matrix });
+  } catch {
+    return fallback;
+  }
+}
+
+/**
+ * One burst of snowflakes and gold stars for Christmas Day, fired at most once
+ * per day by the countdown. Reduced motion disables it.
+ */
+export async function fireChristmasDayConfetti(): Promise<void> {
+  const { default: confetti } = await loadConfetti();
+  const starShape = makeShape(confetti, STAR_PATH, 'star');
+  const snowflakeShape = makeShape(confetti, SNOWFLAKE_PATH, 'circle');
+  const colors = readColours(CONFETTI.goldColorVars);
+
+  confetti({
+    particleCount: COUNTDOWN.confetti.count,
+    spread: COUNTDOWN.confetti.spread,
+    startVelocity: COUNTDOWN.confetti.startVelocity,
+    gravity: COUNTDOWN.confetti.gravity,
+    ticks: COUNTDOWN.confetti.ticks,
+    scalar: COUNTDOWN.confetti.scalar,
+    shapes: [starShape, snowflakeShape],
+    colors,
+    origin: { x: 0.5, y: 0.4 },
+    disableForReducedMotion: true,
+  });
+}
+
 /**
  * A short paper burst with a gold-and-white star and snowflake flourish.
  * canvas-confetti is loaded only when someone actually claims a gift.
@@ -51,20 +91,8 @@ export async function fireClaimConfetti(
     return;
   }
 
-  function makeShape(path: string, fallback: 'star' | 'circle') {
-    try {
-      // Supplying the matrix skips canvas-confetti's slow path scan.
-      const scale = 10 / 24;
-      const matrix = new DOMMatrix([scale, 0, 0, scale, -5, -5]);
-
-      return confetti.shapeFromPath({ path, matrix });
-    } catch {
-      return fallback;
-    }
-  }
-
-  const starShape = makeShape(STAR_PATH, 'star');
-  const snowflakeShape = makeShape(SNOWFLAKE_PATH, 'circle');
+  const starShape = makeShape(confetti, STAR_PATH, 'star');
+  const snowflakeShape = makeShape(confetti, SNOWFLAKE_PATH, 'circle');
   const paperColors = readColours(CONFETTI.paperColorVars);
   const goldColors = readColours(CONFETTI.goldColorVars);
 

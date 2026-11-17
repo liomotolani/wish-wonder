@@ -228,3 +228,40 @@ export const CONFETTI = {
   starGravity: 0.7,
   starScalar: 1.15,
 } as const;
+
+/**
+ * The split-flap Christmas countdown on the family dashboard. Five values step
+ * through in 0.11s beats (0.44s), the last digit lands 0.06s after the first,
+ * and the settling spring brings the whole roll to rest at about 0.8s.
+ */
+export const COUNTDOWN = {
+  /** How many values the board steps through before it lands. */
+  rollSteps: 5,
+  /** Seconds between rolled values. */
+  rollStep: 0.11,
+  /** Each digit lands this long after the one to its left. */
+  digitStagger: 0.06,
+  /** A smaller stagger for the quick flip when the board already rolled today. */
+  quickStagger: 0.03,
+  /** Nominal settle of the landing spring. */
+  settle: 0.32,
+  /** Length of the quick flip-in on later visits. */
+  quick: 0.3,
+  /** The soft gold glow that blooms and fades as the digits land. */
+  glow: 0.7,
+  /** Tiny gold sparkles around the board. */
+  sparkleCount: 4,
+  sparkleExtraCount: 7,
+  sparkle: 0.55,
+  sparkleStep: 0.035,
+  /** One burst of snowflakes and gold stars on Christmas Day. */
+  confetti: {
+    count: 90,
+    spread: 110,
+    startVelocity: 34,
+    gravity: 0.8,
+    ticks: 190,
+    scalar: 1.05,
+  },
+} as const;
+
