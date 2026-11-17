@@ -230,11 +230,6 @@ export default async function SecretGiftsPage() {
             </div>
           </>
         )}
-
-        <p className="mt-8 flex items-center justify-center gap-2 text-center text-xs text-muted">
-          <LockIcon className="h-4 w-4" />
-          The recipient never sees this page, not even a hint.
-        </p>
       </div>
     </main>
   );

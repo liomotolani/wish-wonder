@@ -10,7 +10,6 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col bg-snow">
       <SiteHeader
-        viewerName={viewer.member.displayName}
         daysUntilChristmas={daysUntilChristmas()}
         isOrganiser={viewer.family.organiserMemberId === viewer.member.id}
       />

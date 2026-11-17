@@ -61,18 +61,16 @@ export default async function FamilyPage() {
               </h1>
             </div>
             <div className="lg:hidden">
-              <div className="flex items-center gap-2">
-                {viewer.family.organiserMemberId === viewer.member.id ? (
-                  <Link
-                    href="/settings"
-                    aria-label="Family settings"
-                    className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-snow/10 text-snow transition-colors hover:bg-snow/15 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
-                  >
-                    <SettingsIcon className="h-5 w-5" />
-                  </Link>
-                ) : null}
-                <Bauble name={viewer.member.displayName} />
-              </div>
+              {isOrganiser ? (
+                <Link
+                  href="/settings"
+                  aria-label="Family settings"
+                  title="Family settings"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-snow/10 text-snow transition-colors hover:bg-snow/15 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+                >
+                  <SettingsIcon className="h-5 w-5" />
+                </Link>
+              ) : null}
             </div>
           </div>
 
@@ -81,12 +79,12 @@ export default async function FamilyPage() {
           </p>
 
           <div className="mt-3 flex items-center justify-between gap-4">
-            <p className="flex items-baseline gap-3">
+            <p className="flex items-end gap-3">
               <FlipNumber
                 value={days}
                 className="text-6xl font-extrabold leading-none tracking-[-0.05em] text-snow sm:text-7xl"
               />
-              <span className="max-w-[9rem] text-base leading-tight text-snow/65 sm:text-lg">
+              <span className="max-w-[9rem] pb-1 text-base leading-tight text-snow/65 sm:text-lg">
                 {days === 0 ? 'Christmas Day is here' : 'days until Christmas Day'}
               </span>
             </p>
@@ -341,10 +339,6 @@ export default async function FamilyPage() {
           </div>
         </div>
       </div>
-
-      <p className="mx-auto flex w-full max-w-6xl items-center justify-center gap-2 px-4 pb-4 text-center text-xs text-muted lg:pb-8">
-        <LockIcon className="h-4 w-4" />A claimed gift never shows on its owner&apos;s list.
-      </p>
     </main>
   );
 }
