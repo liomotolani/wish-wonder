@@ -12,6 +12,8 @@ type BaubleTone = (typeof TONES)[number];
 interface BaubleProps {
   name: string;
   className?: string;
+  /** A single welcome swing on mount. The dashboard turns this on in the last week. */
+  swing?: boolean;
 }
 
 function toneForName(name: string): BaubleTone {
@@ -25,14 +27,14 @@ const TONE_STYLES: Record<BaubleTone, string> = {
   gold: 'bg-gold-100 text-gold-ink',
 };
 
-export function Bauble({ name, className = '' }: BaubleProps) {
+export function Bauble({ name, className = '', swing = true }: BaubleProps) {
   const initial = name.trim().charAt(0).toUpperCase() || '?';
   const reduce = useReducedMotion();
   const finePointer = useMediaQuery('(hover: hover) and (pointer: fine)');
   const controls = useAnimationControls();
 
   useEffect(() => {
-    if (reduce) {
+    if (reduce || !swing) {
       return;
     }
 
@@ -43,7 +45,7 @@ export function Bauble({ name, className = '' }: BaubleProps) {
       { rotate: [0, 3.5, -3.5, 0] },
       { duration: 0.5, ease: EASE_IN_OUT, delay },
     );
-  }, [controls, name, reduce]);
+  }, [controls, name, reduce, swing]);
 
   function handleHoverStart() {
     if (reduce || !finePointer) {

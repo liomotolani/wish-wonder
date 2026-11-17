@@ -110,13 +110,6 @@ export default async function ManagedWishlistPage({ params }: ManagedWishlistPag
             editHref={(giftId) => `${returnHref}/${giftId}`}
           />
         )}
-
-        {gifts.length > 0 ? (
-          <p className="mt-8 flex items-center justify-center gap-2 text-center text-xs text-muted">
-            <LockIcon className="h-4 w-4" />
-            Only you can edit this list. Nobody can see what has been picked.
-          </p>
-        ) : null}
       </div>
     </main>
   );

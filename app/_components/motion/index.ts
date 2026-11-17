@@ -1,6 +1,7 @@
 export {
   CONFETTI,
   CONFIRMATION,
+  COUNTDOWN,
   DIALOG_LAPTOP,
   DIALOG_PHONE,
   DURATION,
@@ -20,6 +21,8 @@ export {
 } from './presets';
 export { SnowflakeMark, SparkleStar } from './Sparkle';
 export { FlipNumber } from './FlipNumber';
+export { ChristmasCountdown } from './Countdown';
+export type { FlipAnimation } from './FlipNumber';
 export { MotionProvider } from './MotionProvider';
 export { useIsLaptop, useMediaQuery } from './useMediaQuery';
 export { Snowfall } from './Snowfall';

@@ -9,7 +9,7 @@ import { Bauble } from '@/app/_components/Bauble';
 import { ApproveMemberButton } from '@/app/_components/ApproveMemberButton';
 import { ShareFamilyLink } from '@/app/_components/CopyButton';
 import { NoActiveEventNotice } from '@/app/_components/NoActiveEventNotice';
-import { FlipNumber, Snowfall, StaggerItem, StaggerList } from '@/app/_components/motion';
+import { ChristmasCountdown, Snowfall, StaggerItem, StaggerList } from '@/app/_components/motion';
 import {
   ArrowRightIcon,
   DeviceIcon,
@@ -79,15 +79,7 @@ export default async function FamilyPage() {
           </p>
 
           <div className="mt-3 flex items-center justify-between gap-4">
-            <p className="flex items-end gap-3">
-              <FlipNumber
-                value={days}
-                className="text-6xl font-extrabold leading-none tracking-[-0.05em] text-snow sm:text-7xl"
-              />
-              <span className="max-w-[9rem] pb-1 text-base leading-tight text-snow/65 sm:text-lg">
-                {days === 0 ? 'Christmas Day is here' : 'days until Christmas Day'}
-              </span>
-            </p>
+            <ChristmasCountdown initialDays={days} />
             <div className="hidden sm:block">
               <div className="flex flex-col items-end gap-1.5">
                 <ShareFamilyLink
@@ -162,7 +154,11 @@ export default async function FamilyPage() {
                     className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-white/70 px-3 py-2"
                   >
                     <span className="flex items-center gap-2">
-                      <Bauble name={member.displayName} className="scale-90" />
+                      <Bauble
+                        name={member.displayName}
+                        className="scale-90"
+                        swing={days <= 7}
+                      />
                       <span className="text-sm font-bold text-ink">{member.displayName}</span>
                     </span>
                     <ApproveMemberButton
@@ -212,7 +208,7 @@ export default async function FamilyPage() {
                   key={member.id}
                   className="flex items-center gap-3 rounded-2xl border border-pine-100 bg-white p-4 shadow-sm sm:flex-col sm:items-start sm:p-5"
                 >
-                  <Bauble name={member.displayName} />
+                  <Bauble name={member.displayName} swing={days <= 7} />
                   <div className="min-w-0 flex-1 sm:mt-2">
                     <Link
                       href={`/pick/${member.id}`}

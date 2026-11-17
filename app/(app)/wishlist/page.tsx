@@ -7,11 +7,7 @@ import { PageHeaderBand } from '@/app/_components/PageHeaderBand';
 import { WishlistTabs } from '@/app/_components/WishlistTabs';
 import { WishlistGiftGrid } from '@/app/_components/WishlistGiftGrid';
 import { NoActiveEventNotice } from '@/app/_components/NoActiveEventNotice';
-import {
-  GiftIcon,
-  LockIcon,
-  PlusIcon,
-} from '@/app/_components/icons';
+import { PlusIcon } from '@/app/_components/icons';
 
 export const metadata: Metadata = {
   title: 'My Wishlist',
@@ -62,12 +58,7 @@ export default async function WishlistPage() {
             <span className="hidden sm:inline">Add a gift</span>
           </Link>
         }
-      >
-        <p className="inline-flex items-center gap-2 rounded-full bg-snow/10 px-4 py-2 text-sm text-snow/85">
-          <LockIcon className="h-4 w-4 text-gold" />
-          You&apos;ll never see what&apos;s been picked
-        </p>
-      </PageHeaderBand>
+      />
 
       <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-8 lg:px-6 lg:py-8">
         {gifts.length === 0 ? (
@@ -93,13 +84,6 @@ export default async function WishlistPage() {
         ) : (
           <WishlistGiftGrid gifts={gifts} editHref={(giftId) => `/wishlist/${giftId}`} />
         )}
-
-        {gifts.length > 0 ? (
-          <p className="mt-8 flex items-center justify-center gap-2 text-center text-xs text-muted">
-            <GiftIcon className="h-4 w-4" />
-            Only you can edit this list. Nobody can see what has been picked.
-          </p>
-        ) : null}
       </div>
     </main>
   );
