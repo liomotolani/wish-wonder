@@ -8,6 +8,8 @@ const devOrigins = (process.env.ALLOWED_DEV_ORIGINS ?? "")
 const nextConfig: NextConfig = {
   agentRules: false,
   devIndicators: false,
+  // Keep file tracing inside this repo; avoids a stray parent lockfile widening the root.
+  outputFileTracingRoot: process.cwd(),
   allowedDevOrigins: [
     "192.168.*.*",
     "10.*.*.*",

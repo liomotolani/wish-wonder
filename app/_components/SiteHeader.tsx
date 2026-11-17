@@ -3,11 +3,9 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Logo } from '@/app/_components/Logo';
-import { Bauble } from '@/app/_components/Bauble';
-import { GiftIcon, LockIcon, TreeIcon } from '@/app/_components/icons';
+import { GiftIcon, LockIcon, SettingsIcon, TreeIcon } from '@/app/_components/icons';
 
 interface SiteHeaderProps {
-  viewerName: string;
   daysUntilChristmas: number;
   isOrganiser: boolean;
 }
@@ -18,11 +16,7 @@ const NAV_ITEMS = [
   { href: '/secret-gifts', label: 'Secret Gifts', Icon: LockIcon },
 ];
 
-export function SiteHeader({
-  viewerName,
-  daysUntilChristmas,
-  isOrganiser,
-}: SiteHeaderProps) {
+export function SiteHeader({ daysUntilChristmas, isOrganiser }: SiteHeaderProps) {
   const pathname = usePathname();
   const isSettings = pathname === '/settings';
 
@@ -56,29 +50,27 @@ export function SiteHeader({
         </div>
 
         <div className="flex items-center gap-4">
-          {isOrganiser ? (
-            <Link
-              href="/settings"
-              aria-current={isSettings ? 'page' : undefined}
-              className={`inline-flex min-h-11 items-center rounded-full px-4 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold ${
-                isSettings
-                  ? 'bg-snow/10 text-snow'
-                  : 'text-snow/70 hover:bg-snow/5 hover:text-snow'
-              }`}
-            >
-              Settings
-            </Link>
-          ) : null}
           <span className="inline-flex items-center gap-2 rounded-full bg-gold/15 px-4 py-2 text-sm font-semibold text-gold">
             <TreeIcon className="h-4 w-4" />
             {daysUntilChristmas === 0
               ? 'Christmas Day is here'
               : `${daysUntilChristmas} days to Christmas`}
           </span>
-          <span className="inline-flex items-center" title={`Signed in as ${viewerName}`}>
-            <Bauble name={viewerName} />
-            <span className="sr-only">Signed in as {viewerName}</span>
-          </span>
+          {isOrganiser ? (
+            <Link
+              href="/settings"
+              aria-label="Family settings"
+              title="Family settings"
+              aria-current={isSettings ? 'page' : undefined}
+              className={`inline-flex h-11 w-11 items-center justify-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold ${
+                isSettings
+                  ? 'bg-snow/10 text-snow'
+                  : 'text-snow/70 hover:bg-snow/5 hover:text-snow'
+              }`}
+            >
+              <SettingsIcon className="h-5 w-5" />
+            </Link>
+          ) : null}
         </div>
       </div>
     </header>

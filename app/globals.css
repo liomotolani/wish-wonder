@@ -40,12 +40,12 @@ body {
 
 /* Static snowy dots used on the deep pine surfaces. */
 .snow-dots {
-  background-image: radial-gradient(rgba(228, 238, 232, 0.22) 1.5px, transparent 1.5px);
+  background-image: radial-gradient(rgba(228, 238, 232, 0.22) 0.5px, transparent 0.5px);
   background-size: 22px 22px;
 }
 
 .snow-dots-soft {
-  background-image: radial-gradient(rgba(228, 238, 232, 0.14) 1.5px, transparent 1.5px);
+  background-image: radial-gradient(rgba(228, 238, 232, 0.14) 0.5px, transparent 0.5px);
   background-size: 26px 26px;
 }
 

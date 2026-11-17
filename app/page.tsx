@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { Logo } from '@/app/_components/Logo';
 import { GiftCardsIllustration } from '@/app/_components/GiftCardsIllustration';
 import { Snowfall } from '@/app/_components/motion';
-import { ArrowRightIcon, LockIcon } from '@/app/_components/icons';
+import { ArrowRightIcon, GiftIcon, LockIcon, StarIcon } from '@/app/_components/icons';
 import { getViewer } from '@/lib/session';
 
 export const metadata: Metadata = {
@@ -14,19 +14,19 @@ export const metadata: Metadata = {
 
 const STEPS = [
   {
-    number: '1',
-    title: 'Add your wishes',
-    body: "List the gifts you'd love, with sizes, colours and links.",
+    Icon: StarIcon,
+    title: 'Make a Wish',
+    body: "Add the gifts you'd love, down to the little details.",
   },
   {
-    number: '2',
-    title: 'Pick a mystery number',
-    body: 'Each number hides one wish. Peek at as many as you like.',
+    Icon: GiftIcon,
+    title: 'Reveal the Magic',
+    body: 'Pick a mystery number and uncover a wish. Keep exploring!',
   },
   {
-    number: '3',
-    title: 'Claim it in secret',
-    body: 'Nobody else can buy it, and the recipient never knows.',
+    Icon: LockIcon,
+    title: 'Keep the Secret',
+    body: "Claim a gift so it's yours to give, without spoiling the surprise.",
   },
 ];
 
@@ -67,20 +67,15 @@ export default async function Home() {
         <main id="main" className="relative mx-auto w-full max-w-6xl px-5 pb-14 sm:px-8 lg:px-6">
           <div className="grid items-center gap-2 lg:grid-cols-[1.15fr_0.85fr] lg:gap-12 lg:pt-6">
             <div className="order-2 lg:order-1">
-              <p className="hidden w-fit items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.14em] text-gold lg:inline-flex">
-                Family Christmas, sorted
-              </p>
-
               <GiftCardsIllustration className="mt-2 lg:hidden" />
 
-              <h1 className="mt-8 max-w-2xl text-5xl font-extrabold leading-[1.03] tracking-[-0.035em] sm:text-6xl lg:mt-6 lg:text-7xl">
-                The gifts they want. The{' '}
-                <span className="text-gold">surprises</span> they deserve.
+              <h1 className="mt-8 max-w-2xl text-4xl font-extrabold leading-[1.05] tracking-[-0.035em] sm:text-5xl lg:mt-6 lg:text-7xl">
+                Where Christmas Wishes Become{' '}
+                <span className="text-gold">Magical Surprises</span>
               </h1>
 
               <p className="mt-5 max-w-xl text-base leading-relaxed text-snow/70 sm:text-lg">
-                Share wish lists as a family, then pick a mystery number to find the perfect
-                present. Nobody sees what&apos;s coming.
+                Share wishes, reveal gifts, and keep the magic of surprise alive.
               </p>
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -97,8 +92,6 @@ export default async function Home() {
                   Join with a link
                 </Link>
               </div>
-
-              <p className="mt-4 text-sm text-snow/55">No accounts. No passwords. Just a link.</p>
             </div>
 
             <div className="order-1 hidden lg:order-2 lg:block">
@@ -109,20 +102,17 @@ export default async function Home() {
           <ul className="mt-16 hidden gap-4 pb-4 sm:grid sm:grid-cols-3 lg:mt-20">
             {STEPS.map((step) => (
               <li
-                key={step.number}
+                key={step.title}
                 className="rounded-2xl border border-snow/10 bg-snow/[0.06] p-5"
               >
-                <span className="text-xl font-extrabold text-gold">{step.number}</span>
+                <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-gold/15 text-gold">
+                  <step.Icon className="h-4.5 w-4.5" />
+                </span>
                 <h2 className="mt-3 text-base font-bold text-snow">{step.title}</h2>
                 <p className="mt-1.5 text-sm leading-relaxed text-snow/60">{step.body}</p>
               </li>
             ))}
           </ul>
-
-          <p className="mt-8 flex items-center justify-center gap-2 text-center text-xs text-snow/60">
-            <LockIcon className="h-4 w-4" />
-            Surprises are protected on the server, not just hidden on screen.
-          </p>
         </main>
       </div>
     </div>
