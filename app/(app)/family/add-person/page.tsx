@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ChevronLeftIcon } from '@/app/_components/icons';
 import { AddManagedMemberForm } from '@/app/_components/AddManagedMemberForm';
 import { requireViewer } from '@/lib/session';
+import { groupWording } from '@/lib/groupWording';
 
 export const metadata: Metadata = {
   title: 'Add someone',
@@ -10,7 +11,8 @@ export const metadata: Metadata = {
 };
 
 export default async function AddPersonPage() {
-  await requireViewer();
+  const viewer = await requireViewer();
+  const wording = groupWording(viewer.family.groupType);
 
   return (
     <main id="main" className="min-h-[70vh]">
@@ -25,7 +27,7 @@ export default async function AddPersonPage() {
           </Link>
           <div>
             <h1 className="text-2xl font-extrabold tracking-tight text-ink">
-              Add someone to the family
+              Add someone to your {wording.groupWord}
             </h1>
             <p className="text-sm text-muted">For a person without a phone.</p>
           </div>

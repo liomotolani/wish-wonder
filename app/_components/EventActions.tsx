@@ -7,11 +7,12 @@ import { AlertCircleIcon, CloseIcon, PlusIcon } from '@/app/_components/icons';
 
 interface EventActionsProps {
   activeEvent: { id: string; name: string } | null;
+  groupWord: string;
 }
 
 type PendingAction = 'archive' | 'new';
 
-export function EventActions({ activeEvent }: EventActionsProps) {
+export function EventActions({ activeEvent, groupWord }: EventActionsProps) {
   const router = useRouter();
   const dialog = useRef<HTMLDialogElement>(null);
   const [action, setAction] = useState<PendingAction>('new');
@@ -97,10 +98,10 @@ export function EventActions({ activeEvent }: EventActionsProps) {
 
           <p className="mt-3 text-sm leading-relaxed text-muted">
             {action === 'archive'
-              ? `${activeEvent?.name} will be closed. Its gifts and claims stay in the history, but they will no longer appear on the family page.`
+              ? `${activeEvent?.name} will be closed. Its gifts and claims stay in the history, but they will no longer appear on the Home page.`
               : activeEvent
-                ? 'This closes the current event and starts a fresh one. Your family and members stay the same; wish lists begin again.'
-                : 'This starts a fresh Christmas event. Your family and members stay the same; wish lists begin again.'}
+                ? `This closes the current event and starts a fresh one. Your ${groupWord} and members stay the same; wish lists begin again.`
+                : `This starts a fresh Christmas event. Your ${groupWord} and members stay the same; wish lists begin again.`}
           </p>
 
           {error ? (

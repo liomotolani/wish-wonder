@@ -55,7 +55,7 @@ export function JoinCodeForm() {
         type="submit"
         className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-full bg-cranberry px-6 py-4 text-base font-bold text-white transition-colors hover:bg-cranberry-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
       >
-        Find my family
+        Find my group
         <ArrowRightIcon className="h-5 w-5" />
       </button>
     </form>

@@ -93,8 +93,8 @@ export default async function ManagedWishlistPage({ params }: ManagedWishlistPag
               {managed.displayName}&apos;s list is empty
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-muted">
-              Add the gifts they would love. They will appear on the family page for everyone
-              to choose from.
+              Add the gifts they would love. They will appear on the Home page for everyone to
+              choose from.
             </p>
             <Link
               href={`${returnHref}/new`}

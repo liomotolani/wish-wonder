@@ -15,7 +15,7 @@ export function WishlistGiftGrid({ gifts, editHref }: WishlistGiftGridProps) {
   return (
     <StaggerList className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4">
       {gifts.map((gift, index) => {
-        const price = formatPrice(gift.pricePence);
+        const price = formatPrice(gift.pricePence, gift.currency);
         const isPriority = gift.priority === PRIORITY_REALLY_WANT;
 
         return (

@@ -33,6 +33,7 @@ export function sampleGift(overrides: Partial<GiftInput> = {}): GiftInput {
     name: 'Nike Air Max Trainers',
     description: 'The classic ones, for everyday wear',
     imageUrl: null,
+    currency: 'GBP',
     pricePence: 9500,
     shopUrl: 'https://example.com/trainers',
     preferences: 'Black, Size 6',

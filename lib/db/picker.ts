@@ -1,5 +1,6 @@
 import 'server-only';
 import { createAdminClient } from '@/lib/db/client';
+import { DEFAULT_CURRENCY, isCurrencyCode } from '@/lib/currencies';
 import { shuffleGiftIds } from '@/lib/picker-shuffle';
 import { createPickerSeed } from '@/lib/tokens';
 import type {
@@ -34,6 +35,7 @@ interface GiftRow {  id: string;
   name: string;
   description: string | null;
   image_url: string | null;
+  currency: string;
   price_pence: number | null;
   shop_url: string | null;
   preferences: string | null;
@@ -45,6 +47,7 @@ function toRevealedGift(row: GiftRow): RevealedGiftView {
     name: row.name,
     description: row.description,
     imageUrl: row.image_url,
+    currency: isCurrencyCode(row.currency) ? row.currency : DEFAULT_CURRENCY,
     pricePence: row.price_pence,
     shopUrl: row.shop_url,
     preferences: row.preferences,
@@ -328,7 +331,7 @@ export async function getReveal(
   const supabase = createAdminClient();
   const { data: gift, error } = await supabase
     .from('gifts')
-    .select('id, name, description, image_url, price_pence, shop_url, preferences, priority')
+    .select('id, name, description, image_url, currency, price_pence, shop_url, preferences, priority')
     .eq('id', giftId)
     .eq('owner_member_id', visit.recipientMemberId)
     .eq('event_id', eventId)
@@ -405,7 +408,7 @@ export async function claimFromVisit(
 
   const { data: gift, error: giftError } = await supabase
     .from('gifts')
-    .select('name, description, image_url, price_pence, shop_url, preferences, priority')
+    .select('name, description, image_url, currency, price_pence, shop_url, preferences, priority')
     .eq('id', giftId)
     .eq('owner_member_id', visit.recipientMemberId)
     .eq('event_id', eventId)
@@ -423,6 +426,7 @@ export async function claimFromVisit(
     name: gift.name,
     description: gift.description,
     image_url: gift.image_url,
+    currency: gift.currency,
     price_pence: gift.price_pence,
     shop_url: gift.shop_url,
     preferences: gift.preferences,

@@ -72,6 +72,8 @@ interface ShareFamilyLinkProps {
   familyName: string;
   className?: string;
   label?: string;
+  /** The group word for share copy, for example "family" or "team". */
+  groupWord?: string;
 }
 
 export function ShareFamilyLink({
@@ -79,30 +81,38 @@ export function ShareFamilyLink({
   familyName,
   className = '',
   label = 'Share link',
+  groupWord = 'group',
 }: ShareFamilyLinkProps) {
   const [status, setStatus] = useState<'idle' | 'shared' | 'copied' | 'error'>('idle');
 
   async function handleShare() {
-    try {
-      if (typeof navigator.share === 'function') {
+    const canUseShare =
+      typeof navigator.share === 'function' &&
+      window.matchMedia('(pointer: coarse)').matches;
+
+    if (canUseShare) {
+      try {
         await navigator.share({
           title: `Join ${familyName} on Wish & Wonder`,
-          text: `Join our family wish list: ${familyName}`,
+          text: `Join our ${groupWord} wish list: ${familyName}`,
           url,
         });
         setStatus('shared');
         window.setTimeout(() => setStatus('idle'), 2500);
         return;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          return;
+        }
+        // A blocked or unavailable share sheet falls through to copying.
       }
+    }
 
+    try {
       await copyText(url);
       setStatus('copied');
       window.setTimeout(() => setStatus('idle'), 2500);
-    } catch (error) {
-      if (error instanceof DOMException && error.name === 'AbortError') {
-        return;
-      }
-
+    } catch {
       setStatus('error');
     }
   }

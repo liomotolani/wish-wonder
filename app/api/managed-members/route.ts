@@ -39,7 +39,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   } catch (error) {
     if (isUniqueViolation(error)) {
       return apiError(
-        'Someone in the family already uses that name. Try another one.',
+        'Someone in this group already uses that name. Try another one.',
         409,
       );
     }

@@ -2,6 +2,7 @@ import 'server-only';
 import { createAdminClient } from '@/lib/db/client';
 import { listPendingMembers } from '@/lib/db/members';
 import { christmasYear } from '@/lib/dates';
+import type { GroupType } from '@/lib/groupWording';
 import type { FamilyMemberAdminView, SettingsData, Viewer } from '@/lib/types';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -48,6 +49,7 @@ export async function updateFamilySettings(input: {
   familyId: string;
   organiserMemberId: string;
   name?: string;
+  groupType?: GroupType;
   requiresApproval?: boolean;
 }): Promise<'ok' | 'not_allowed'> {
   const supabase = createAdminClient();
@@ -65,10 +67,14 @@ export async function updateFamilySettings(input: {
     return 'not_allowed';
   }
 
-  const update: { name?: string; requires_approval?: boolean } = {};
+  const update: { name?: string; group_type?: GroupType; requires_approval?: boolean } = {};
 
   if (input.name !== undefined) {
     update.name = input.name;
+  }
+
+  if (input.groupType !== undefined) {
+    update.group_type = input.groupType;
   }
 
   if (input.requiresApproval !== undefined) {

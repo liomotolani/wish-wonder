@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     template: "%s · Wish & Wonder",
   },
   description:
-    "The gifts they want. The surprises they deserve. A family Christmas wish list with secret mystery reveals.",
+    "The gifts they want. The surprises they deserve. A Christmas wish list for families, friends and colleagues, with secret mystery reveals.",
   applicationName: "Wish & Wonder",
 };
 

@@ -41,7 +41,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     if (!visit) {
       return noStoreJson(
-        { ok: false, reason: 'expired', error: 'That picker has expired. Start again from the family page.' },
+        { ok: false, reason: 'expired', error: 'That picker has expired. Start again from the Home page.' },
         { status: 404 },
       );
     }

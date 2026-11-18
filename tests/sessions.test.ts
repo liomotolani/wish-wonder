@@ -63,6 +63,7 @@ describe('sessions, device links and link reissue', () => {
     expect(used).toEqual({
       ok: true,
       memberId: family.viewers.james.member.id,
+      familyId: family.familyId,
       memberStatus: 'active',
     });
 

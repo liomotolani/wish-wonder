@@ -120,7 +120,7 @@ export function ClaimGiftButton({
               href="/family"
               className="inline-flex min-h-12 items-center justify-center rounded-full bg-cranberry px-5 text-sm font-bold text-white hover:bg-cranberry-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
             >
-              Back to family
+              Back to Home
             </Link>
             <Link
               href={backHref}

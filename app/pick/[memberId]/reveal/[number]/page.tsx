@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { requireViewer } from '@/lib/session';
+import { groupWording } from '@/lib/groupWording';
 import { RevealExperience } from '@/app/_components/RevealExperience';
 
 export const metadata: Metadata = {
@@ -14,7 +15,8 @@ interface RevealPageProps {
 }
 
 export default async function RevealPage({ params, searchParams }: RevealPageProps) {
-  await requireViewer();
+  const viewer = await requireViewer();
+  const wording = groupWording(viewer.family.groupType);
 
   const { memberId, number: numberParam } = await params;
   const search = await searchParams;
@@ -29,5 +31,12 @@ export default async function RevealPage({ params, searchParams }: RevealPagePro
     redirect(`/pick/${memberId}`);
   }
 
-  return <RevealExperience memberId={memberId} number={number} visitId={visitId} />;
+  return (
+    <RevealExperience
+      memberId={memberId}
+      number={number}
+      visitId={visitId}
+      groupWord={wording.groupWord}
+    />
+  );
 }

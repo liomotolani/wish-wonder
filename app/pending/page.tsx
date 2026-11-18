@@ -38,7 +38,7 @@ export default async function PendingPage() {
             </h1>
             <p className="mt-4 text-base leading-relaxed text-snow/70">
               Hi {viewer.member.displayName}. Your organiser needs to approve you before you can
-              see the family lists. Save your personal link and come back when they have.
+              see everyone&apos;s lists. Save your personal link and come back when they have.
             </p>
             <Link
               href="/"

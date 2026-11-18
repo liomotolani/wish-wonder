@@ -9,6 +9,8 @@ interface MotionDialogProps {
   dialogRef: RefObject<HTMLDialogElement | null>;
   labelledBy: string;
   className?: string;
+  /** Anchors the dialog to the bottom of a phone, like a sheet. */
+  mobileSheet?: boolean;
   children: ReactNode;
 }
 
@@ -20,6 +22,7 @@ export function MotionDialog({
   dialogRef,
   labelledBy,
   className = '',
+  mobileSheet = false,
   children,
 }: MotionDialogProps) {
   const isLaptop = useIsLaptop();
@@ -49,7 +52,11 @@ export function MotionDialog({
     <dialog
       ref={setRef}
       aria-labelledby={labelledBy}
-      className={`motion-dialog m-auto w-[calc(100%-2rem)] rounded-3xl border-0 bg-white p-0 text-ink shadow-2xl backdrop:bg-pine-900/70 ${className}`}
+      className={`motion-dialog bg-white p-0 text-ink shadow-2xl backdrop:bg-pine-900/70 ${
+        mobileSheet
+          ? 'mt-auto mb-0 w-full max-w-none rounded-t-3xl rounded-b-none border-0 sm:m-auto sm:w-[calc(100%-2rem)] sm:max-w-lg sm:rounded-3xl'
+          : 'm-auto w-[calc(100%-2rem)] rounded-3xl border-0'
+      } ${className}`}
     >
       <motion.div
         initial={false}

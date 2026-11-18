@@ -108,6 +108,7 @@ describe('surprise protection', () => {
     expect(data.ok).toBe(true);
     expect(data.recipientName).toBe('Sarah');
     expect(Object.keys(data.gift).sort()).toEqual([
+      'currency',
       'description',
       'imageUrl',
       'name',
@@ -149,6 +150,7 @@ describe('surprise protection', () => {
     expect(result.gift.name).toBeTruthy();
     expect(Object.keys(result.gift).sort()).toEqual(
       [
+        'currency',
         'description',
         'imageUrl',
         'name',

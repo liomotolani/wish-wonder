@@ -1,3 +1,6 @@
+import type { GroupType } from '@/lib/groupWording';
+import type { CurrencyCode } from '@/lib/currencies';
+
 export type ClaimStatus = 'reserved' | 'purchased' | 'released';
 export type MemberStatus = 'pending' | 'active';
 export type EventStatus = 'active' | 'archived';
@@ -5,6 +8,7 @@ export type EventStatus = 'active' | 'archived';
 export interface Family {
   id: string;
   name: string;
+  group_type: GroupType;
   invite_code: string;
   organiser_member_id: string | null;
   requires_approval: boolean;
@@ -43,6 +47,7 @@ export interface Gift {
   name: string;
   description: string | null;
   image_url: string | null;
+  currency: CurrencyCode;
   price_pence: number | null;
   shop_url: string | null;
   preferences: string | null;
@@ -55,6 +60,7 @@ export interface GiftSnapshot {
   name: string;
   description: string | null;
   image_url: string | null;
+  currency: CurrencyCode;
   price_pence: number | null;
   shop_url: string | null;
   preferences: string | null;
@@ -102,6 +108,7 @@ export interface Viewer {
   family: {
     id: string;
     name: string;
+    groupType: GroupType;
     inviteCode: string;
     organiserMemberId: string | null;
     requiresApproval: boolean;
@@ -129,6 +136,7 @@ export interface RevealedGiftView {
   name: string;
   description: string | null;
   imageUrl: string | null;
+  currency: CurrencyCode;
   pricePence: number | null;
   shopUrl: string | null;
   preferences: string | null;
@@ -151,6 +159,7 @@ export type ClaimResult =
 
 export interface FamilyInvitePreview {
   familyName: string;
+  groupType: GroupType;
   requiresApproval: boolean;
   memberNames: string[];
   memberCount: number;
@@ -204,6 +213,7 @@ export interface OwnGiftView {
   name: string;
   description: string | null;
   imageUrl: string | null;
+  currency: CurrencyCode;
   pricePence: number | null;
   shopUrl: string | null;
   preferences: string | null;
@@ -215,6 +225,7 @@ export interface ClaimedGiftView {
   name: string;
   description: string | null;
   imageUrl: string | null;
+  currency: CurrencyCode;
   pricePence: number | null;
   shopUrl: string | null;
   preferences: string | null;
@@ -227,6 +238,14 @@ export interface SecretGiftView {
   gift: ClaimedGiftView;
   recipientName: string;
   claimedAt: string;
+}
+
+export interface DeviceGroupView {
+  familyId: string;
+  name: string;
+  groupType: GroupType;
+  memberName: string;
+  isActive: boolean;
 }
 
 export interface NoticeView {

@@ -1,6 +1,6 @@
 import 'server-only';
 import { createAdminClient } from '@/lib/db/client';
-import { listOwnGifts } from '@/lib/db/gifts';
+import { listOwnGiftNames } from '@/lib/db/gifts';
 import { listPendingMembers } from '@/lib/db/members';
 import type { DashboardData, DashboardMemberView, Viewer } from '@/lib/types';
 
@@ -15,20 +15,24 @@ function toMemberStatus(value: string): 'active' | 'pending' {
  */
 export async function getDashboardData(viewer: Viewer): Promise<DashboardData> {
   const supabase = createAdminClient();
+  const isOrganiser = viewer.family.organiserMemberId === viewer.member.id;
 
-  const [membersResult, ownGifts, claimsResult] = await Promise.all([
+  const [membersResult, ownGiftNames, claimsResult, pendingMembers] = await Promise.all([
     supabase
       .from('members')
       .select('id, display_name, managed_by_member_id, status')
       .eq('family_id', viewer.family.id)
       .eq('status', 'active')
       .order('created_at', { ascending: true }),
-    viewer.event ? listOwnGifts(viewer.member.id, viewer.event.id) : Promise.resolve([]),
+    viewer.event
+      ? listOwnGiftNames(viewer.member.id, viewer.event.id)
+      : Promise.resolve([]),
     supabase
       .from('claims')
       .select('id, status')
       .eq('claimer_member_id', viewer.member.id)
       .in('status', ['reserved', 'purchased']),
+    isOrganiser ? listPendingMembers(viewer.family.id) : Promise.resolve([]),
   ]);
 
   if (membersResult.error) {
@@ -61,16 +65,12 @@ export async function getDashboardData(viewer: Viewer): Promise<DashboardData> {
     });
 
   const claims = claimsResult.data ?? [];
-  const pendingMembers =
-    viewer.family.organiserMemberId === viewer.member.id
-      ? await listPendingMembers(viewer.family.id)
-      : [];
 
   return {
     members,
     pendingMembers,
-    ownGiftCount: ownGifts.length,
-    ownGiftNames: ownGifts.slice(0, 3).map((gift) => gift.name),
+    ownGiftCount: ownGiftNames.length,
+    ownGiftNames: ownGiftNames.slice(0, 3),
     reservedCount: claims.filter((claim) => claim.status === 'reserved').length,
     purchasedCount: claims.filter((claim) => claim.status === 'purchased').length,
   };

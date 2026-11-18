@@ -17,6 +17,7 @@ export async function GET(request: Request): Promise<NextResponse> {
     family: {
       id: auth.viewer.family.id,
       name: auth.viewer.family.name,
+      groupType: auth.viewer.family.groupType,
       organiserMemberId: auth.viewer.family.organiserMemberId,
       requiresApproval: auth.viewer.family.requiresApproval,
     },

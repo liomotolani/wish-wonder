@@ -37,8 +37,8 @@ export function NoActiveEventNotice({
               isDark ? 'text-snow/70' : 'text-muted'
             }`}
           >
-            The organiser needs to start the next Christmas from Family settings. Wish lists
-            and gift picking will return when they do.
+            The organiser needs to start the next Christmas from Group settings. Wish lists and
+            gift picking will return when they do.
           </p>
         </div>
       </div>
@@ -49,7 +49,7 @@ export function NoActiveEventNotice({
             href="/settings"
             className="inline-flex min-h-11 items-center justify-center rounded-full bg-cranberry px-5 text-sm font-bold text-white hover:bg-cranberry-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
           >
-            Open Family settings
+            Open Group settings
           </Link>
         ) : null}
         <Link
@@ -60,7 +60,7 @@ export function NoActiveEventNotice({
               : 'border border-pine-100 text-ink hover:bg-pine-100/60 focus-visible:outline-pine-900'
           }`}
         >
-          Back to family
+          Back to Home
         </Link>
       </div>
     </div>

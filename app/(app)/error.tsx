@@ -30,7 +30,7 @@ export default function AppError({ reset }: ErrorPageProps) {
         href="/family"
         className="mt-3 inline-flex min-h-11 items-center text-sm font-bold text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pine-900"
       >
-        Back to family
+        Back to Home
       </Link>
     </main>
   );

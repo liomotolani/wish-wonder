@@ -278,6 +278,7 @@ describe('claims and overlapping actions', () => {
         name: 'Nike Air Max Trainers (new season)',
         description: 'A different colour now',
         imageUrl: null,
+        currency: 'AUD',
         pricePence: 12000,
         shopUrl: null,
         preferences: 'White, Size 7',
@@ -290,5 +291,6 @@ describe('claims and overlapping actions', () => {
     expect(claims[0].gift.name).toBe('Nike Air Max Trainers');
     expect(claims[0].gift.preferences).toBe('Black, Size 6');
     expect(claims[0].gift.pricePence).toBe(9500);
+    expect(claims[0].gift.currency).toBe('GBP');
   });
 });

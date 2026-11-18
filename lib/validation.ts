@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { GROUP_TYPES } from '@/lib/groupWording';
+import { CURRENCY_CODES, DEFAULT_CURRENCY } from '@/lib/currencies';
 
 export const PRIORITY_REALLY_WANT = 'really_want';
 
@@ -9,8 +11,11 @@ const nameSchema = (label: string, max: number) =>
     .min(1, `Enter ${label}.`)
     .max(max, `${label} is too long.`);
 
+const groupTypeSchema = z.enum(GROUP_TYPES);
+
 export const createFamilySchema = z.object({
-  familyName: nameSchema('a family name', 80),
+  familyName: nameSchema('a group name', 80),
+  groupType: groupTypeSchema.default('family'),
   memberName: nameSchema('your name', 40),
   requiresApproval: z.boolean(),
 });
@@ -28,13 +33,17 @@ export const familySettingsSchema = z
     name: z
       .string()
       .trim()
-      .min(1, 'Enter a family name.')
-      .max(80, 'The family name is too long.')
+      .min(1, 'Enter a group name.')
+      .max(80, 'The group name is too long.')
       .optional(),
+    groupType: groupTypeSchema.optional(),
     requiresApproval: z.boolean().optional(),
   })
   .refine(
-    (value) => value.name !== undefined || value.requiresApproval !== undefined,
+    (value) =>
+      value.name !== undefined ||
+      value.groupType !== undefined ||
+      value.requiresApproval !== undefined,
     'There is nothing to save.',
   );
 
@@ -64,6 +73,7 @@ const optionalUrlSchema = z.preprocess(
 export const giftInputSchema = z.object({
   name: nameSchema('a gift name', 120),
   description: z.string().trim().max(600, 'The description is too long.').nullable(),
+  currency: z.enum(CURRENCY_CODES).default(DEFAULT_CURRENCY),
   pricePence: z
     .number()
     .int('Enter a whole number of pounds and pence.')

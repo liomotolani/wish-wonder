@@ -1,12 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import {
-  motion,
-  useAnimationFrame,
-  useMotionValue,
-  useReducedMotion,
-} from 'motion/react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useReducedMotion } from 'motion/react';
 import { SNOW } from './presets';
 import { SnowflakeMark, SparkleStar } from './Sparkle';
 
@@ -126,94 +121,64 @@ function makePieces(bounds: Bounds, variant: SnowVariant): Piece[] {
   return [...back, ...front, ...stars];
 }
 
-function Drift({ piece, bounds }: { piece: Piece; bounds: Bounds }) {
-  const x = useMotionValue(piece.x + Math.sin(piece.phase) * piece.sway);
-  const y = useMotionValue(piece.y);
-  const rotate = useMotionValue(piece.rotate);
-  const opacity = useMotionValue(piece.opacity);
-  const swayPhase = useRef(0);
-  const twinklePhase = useRef(0);
-
-  useAnimationFrame((_, delta) => {
-    // Pause while the tab is hidden and ignore the gap when it comes back.
-    if (document.hidden || delta > 64) {
-      return;
-    }
-
-    const seconds = Math.min(delta, 64) / 1000;
-
-    let nextY = y.get() + piece.speed * seconds;
-
-    if (nextY > bounds.height + piece.size) {
-      nextY = -piece.size;
-    }
-
-    // Advance from the last frame, not from page load, so returning to the
-    // tab never makes a flake jump sideways.
-    swayPhase.current += piece.swayRate * seconds;
-    twinklePhase.current += piece.twinkleRate * seconds;
-
-    y.set(nextY);
-    x.set(piece.x + Math.sin(swayPhase.current + piece.phase) * piece.sway);
-    rotate.set(rotate.get() + piece.spin * seconds);
-
-    if (piece.kind !== 'dot') {
-      const shimmer = 0.5 + 0.5 * Math.sin(twinklePhase.current + piece.phase);
-      opacity.set(piece.opacity * (1 - SNOW.twinkle * shimmer));
-    }
-  });
-
-  const common = {
-    x,
-    y,
-    rotate,
+function SnowPiece({ piece, bounds }: { piece: Piece; bounds: Bounds }) {
+  const travel = bounds.height + piece.size * 2;
+  const duration = travel / piece.speed;
+  const startFraction = Math.min(1, Math.max(0, piece.y / bounds.height));
+  const swayDuration = Math.PI / piece.swayRate;
+  const twinkleDuration = Math.PI / piece.twinkleRate;
+  const spin = piece.spin * swayDuration;
+  const isDot = piece.kind === 'dot';
+  const style = {
+    left: piece.x,
+    top: -piece.size,
     width: piece.size,
     height: piece.size,
-  };
-
-  if (piece.kind === 'star') {
-    return (
-      <motion.span
-        data-snow-star="true"
-        className="absolute left-0 top-0 text-gold"
-        style={{ ...common, opacity }}
-      >
-        <SparkleStar className="h-full w-full" />
-      </motion.span>
-    );
-  }
-
-  if (piece.kind === 'snowflake') {
-    return (
-      <motion.span
-        data-snowflake="true"
-        className="absolute left-0 top-0 text-snow"
-        style={{ ...common, opacity }}
-      >
-        <SnowflakeMark className="h-full w-full" />
-      </motion.span>
-    );
-  }
+    opacity: isDot ? piece.opacity : undefined,
+    '--snow-travel': `${travel}px`,
+    '--snow-duration': `${duration}s`,
+    '--snow-delay': `${-startFraction * duration}s`,
+    '--snow-sway': `${piece.sway}px`,
+    '--snow-sway-duration': `${swayDuration}s`,
+    '--snow-spin': `${spin}deg`,
+    '--snow-opacity': piece.opacity,
+    '--snow-twinkle-duration': `${twinkleDuration}s`,
+  } as CSSProperties;
 
   return (
-    <motion.span
-      className="absolute left-0 top-0 rounded-full bg-snow"
-      style={{ ...common, opacity: piece.opacity }}
-    />
+    <span
+      data-snow-star={piece.kind === 'star' ? 'true' : undefined}
+      data-snowflake={piece.kind === 'snowflake' ? 'true' : undefined}
+      className={`snow-piece absolute top-0 ${piece.kind === 'star' ? 'text-gold' : 'text-snow'}`}
+      style={style}
+    >
+      <span className="snow-drift block h-full w-full">
+        {isDot ? (
+          <span className="block h-full w-full rounded-full bg-snow" />
+        ) : (
+          <span
+            className="snow-shape block h-full w-full"
+            style={{ rotate: `${piece.rotate}deg` }}
+          >
+            {piece.kind === 'star' ? (
+              <SparkleStar className="h-full w-full" />
+            ) : (
+              <SnowflakeMark className="h-full w-full" />
+            )}
+          </span>
+        )}
+      </span>
+    </span>
   );
 }
 
-/**
- * Mounted only once the real container bounds exist, so the seeded starting
- * positions are correct on the first visible frame.
- */
 function SnowLayer({ bounds, variant }: { bounds: Bounds; variant: SnowVariant }) {
   const [pieces] = useState(() => makePieces(bounds, variant));
 
   return (
     <>
       {pieces.map((piece, index) => (
-        <Drift key={index} piece={piece} bounds={bounds} />
+        <SnowPiece key={index} piece={piece} bounds={bounds} />
       ))}
     </>
   );
@@ -221,8 +186,8 @@ function SnowLayer({ bounds, variant }: { bounds: Bounds; variant: SnowVariant }
 
 /**
  * A light snow layer for dark screens: two depths, soft flakes, a few gold
- * stars. The header variant is a lighter drift for pine bands on light screens.
- * Paused while the tab is hidden.
+ * stars. Pure CSS transforms keep it on the compositor; the header variant is
+ * a lighter drift for pine bands on light screens. Paused while hidden.
  */
 export function Snowfall({
   className = '',
@@ -268,15 +233,25 @@ export function Snowfall({
       );
     }
 
+    function syncPaused() {
+      element?.classList.toggle('snow-paused', document.hidden);
+    }
+
     measure();
+    syncPaused();
+    document.addEventListener('visibilitychange', syncPaused);
 
     if (typeof ResizeObserver === 'undefined') {
-      return;
+      return () => document.removeEventListener('visibilitychange', syncPaused);
     }
 
     const observer = new ResizeObserver(measure);
     observer.observe(element);
-    return () => observer.disconnect();
+
+    return () => {
+      observer.disconnect();
+      document.removeEventListener('visibilitychange', syncPaused);
+    };
   }, [reduce, variant]);
 
   return (

@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { GiftIcon, LockIcon, TreeIcon } from '@/app/_components/icons';
 
 const NAV_ITEMS = [
-  { href: '/family', label: 'Family', Icon: TreeIcon },
+  { href: '/family', label: 'Home', Icon: TreeIcon },
   { href: '/wishlist', label: 'My Wishlist', Icon: GiftIcon },
   { href: '/secret-gifts', label: 'Secret Gifts', Icon: LockIcon },
 ];

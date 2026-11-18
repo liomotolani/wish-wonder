@@ -6,6 +6,7 @@ interface DeviceLinkResult {
   ok: boolean;
   reason?: string;
   member_id?: string;
+  family_id?: string;
   member_status?: string;
 }
 
@@ -31,7 +32,7 @@ export async function createDeviceLinkRecord(input: {
 }
 
 export type UseDeviceLinkResult =
-  | { ok: true; memberId: string; memberStatus: MemberStatus }
+  | { ok: true; memberId: string; familyId: string; memberStatus: MemberStatus }
   | { ok: false; reason: 'not_found' | 'used' | 'expired' };
 
 export async function redeemDeviceLinkRecord(
@@ -63,9 +64,14 @@ export async function redeemDeviceLinkRecord(
     throw new Error('The device link did not return a member.');
   }
 
+  if (typeof result.family_id !== 'string') {
+    throw new Error('The device link did not return a group.');
+  }
+
   return {
     ok: true,
     memberId: result.member_id,
+    familyId: result.family_id,
     memberStatus: result.member_status === 'pending' ? 'pending' : 'active',
   };
 }

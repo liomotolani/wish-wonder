@@ -1,9 +1,11 @@
 import 'server-only';
 import { createAdminClient } from '@/lib/db/client';
+import { isGroupType, type GroupType } from '@/lib/groupWording';
 import type { FamilyInvitePreview, MemberStatus } from '@/lib/types';
 
 export interface CreateFamilyRecordInput {
   familyName: string;
+  groupType?: GroupType;
   memberName: string;
   requiresApproval: boolean;
   inviteCode: string;
@@ -18,7 +20,13 @@ export interface CreateFamilyRecord {
 }
 
 export type JoinFamilyRecord =
-  | { ok: true; memberId: string; memberStatus: MemberStatus; familyName: string }
+  | {
+      ok: true;
+      familyId: string;
+      memberId: string;
+      memberStatus: MemberStatus;
+      familyName: string;
+    }
   | { ok: false; reason: 'not_found' | 'name_taken' };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -31,6 +39,7 @@ export async function createFamilyRecord(
   const supabase = createAdminClient();
   const { data, error } = await supabase.rpc('create_family', {
     p_family_name: input.familyName,
+    p_group_type: input.groupType ?? 'family',
     p_member_name: input.memberName,
     p_requires_approval: input.requiresApproval,
     p_invite_code: input.inviteCode,
@@ -86,8 +95,13 @@ export async function joinFamilyRecord(
     throw new Error('The family could not be joined.');
   }
 
+  if (typeof data.family_id !== 'string') {
+    throw new Error('The family could not be joined.');
+  }
+
   return {
     ok: true,
+    familyId: data.family_id,
     memberId: data.member_id,
     memberStatus: data.member_status === 'pending' ? 'pending' : 'active',
     familyName: data.family_name,
@@ -100,7 +114,7 @@ export async function getFamilyInvitePreview(
   const supabase = createAdminClient();
   const { data: family, error: familyError } = await supabase
     .from('families')
-    .select('id, name, requires_approval')
+    .select('id, name, group_type, requires_approval')
     .eq('invite_code', inviteCode)
     .maybeSingle();
 
@@ -127,6 +141,7 @@ export async function getFamilyInvitePreview(
 
   return {
     familyName: family.name,
+    groupType: isGroupType(family.group_type) ? family.group_type : 'family',
     requiresApproval: family.requires_approval,
     memberNames: memberNames.slice(0, 4),
     memberCount: memberNames.length,

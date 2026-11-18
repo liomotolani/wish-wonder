@@ -40,7 +40,7 @@ export function SecretGiftActions({
   const [error, setError] = useState<string | null>(null);
   const [announcement, setAnnouncement] = useState('');
 
-  const price = formatPrice(gift.pricePence);
+  const price = formatPrice(gift.pricePence, gift.currency);
   const chips = preferenceChips(gift.preferences);
   const isPriority = gift.priority === PRIORITY_REALLY_WANT;
 

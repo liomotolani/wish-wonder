@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { useReducedMotion } from 'motion/react';
 import {
   daysUntilChristmas,
-  londonDateKey,
-  msUntilNextLondonMidnight,
+  dateKeyInTimeZone,
+  msUntilNextMidnight,
 } from '@/lib/dates';
 import {
   countdownAccessibleLabel,
@@ -24,7 +24,13 @@ const CONFETTI_TODAY_KEY = 'ww-countdown-confetti';
  * later visits, and ticks over at London midnight. Milestones add a line of
  * copy, and Christmas Day gets one confetti burst per device per day.
  */
-export function ChristmasCountdown({ initialDays }: { initialDays: number }) {
+export function ChristmasCountdown({
+  initialDays,
+  timeZone,
+}: {
+  initialDays: number;
+  timeZone: string;
+}) {
   const reduce = useReducedMotion();
   const [days, setDays] = useState(initialDays);
   const [mode, setMode] = useState<FlipAnimation>('pending');
@@ -36,7 +42,7 @@ export function ChristmasCountdown({ initialDays }: { initialDays: number }) {
         return;
       }
 
-      const today = londonDateKey();
+      const today = dateKeyInTimeZone(new Date(), timeZone);
       let shouldRoll = false;
 
       try {
@@ -54,30 +60,30 @@ export function ChristmasCountdown({ initialDays }: { initialDays: number }) {
     });
 
     return () => window.cancelAnimationFrame(frame);
-  }, [reduce]);
+  }, [reduce, timeZone]);
 
-  // Flip down by one when the London calendar day turns over.
+  // Flip down by one when this device's calendar day turns over.
   useEffect(() => {
     let timer = 0;
 
     function schedule() {
       timer = window.setTimeout(() => {
-        setDays(daysUntilChristmas());
+        setDays(daysUntilChristmas(new Date(), timeZone));
         schedule();
-      }, Math.max(1000, msUntilNextLondonMidnight() + 300));
+      }, Math.max(1000, msUntilNextMidnight(new Date(), timeZone) + 300));
     }
 
     schedule();
 
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [timeZone]);
 
   useEffect(() => {
     if (reduce || days !== 0 || mode === 'pending') {
       return;
     }
 
-    const today = londonDateKey();
+    const today = dateKeyInTimeZone(new Date(), timeZone);
 
     try {
       if (window.localStorage.getItem(CONFETTI_TODAY_KEY) === today) {
@@ -97,7 +103,7 @@ export function ChristmasCountdown({ initialDays }: { initialDays: number }) {
     );
 
     return () => window.clearTimeout(timer);
-  }, [days, mode, reduce]);
+  }, [days, mode, reduce, timeZone]);
 
   const milestone = countdownMilestone(days);
 

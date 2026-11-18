@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { CopyButton } from '@/app/_components/CopyButton';
 import { AlertCircleIcon, KeyIcon } from '@/app/_components/icons';
-import { getAppBaseUrl } from '@/lib/session';
-import { SESSION_COOKIE_NAME, isPersonalTokenFormat } from '@/lib/tokens';
+import { getAppBaseUrl, getActiveSessionToken, getViewer } from '@/lib/session';
+import { groupWording } from '@/lib/groupWording';
+import { isPersonalTokenFormat } from '@/lib/tokens';
 
 export const metadata: Metadata = {
   title: 'Your personal link',
@@ -37,13 +37,14 @@ export default async function PersonalLinkPage({ searchParams }: PersonalLinkPag
     redirect(`/personal-link${suffix ? `?${suffix}` : ''}`);
   }
 
-  const cookieStore = await cookies();
-  const token = cookieStore.get(SESSION_COOKIE_NAME)?.value ?? '';
+  const token = (await getActiveSessionToken()) ?? '';
 
   if (!isPersonalTokenFormat(token)) {
     redirect('/link-expired');
   }
 
+  const viewer = await getViewer();
+  const wording = groupWording(viewer?.family.groupType);
   const isPending = params.status === 'pending';
   const isCreated = params.created === '1';
   const personalLink = `${await getAppBaseUrl()}/me/${token}`;
@@ -73,14 +74,14 @@ export default async function PersonalLinkPage({ searchParams }: PersonalLinkPag
             {isPending ? (
               <p className="mt-5 flex items-start gap-2 rounded-2xl border border-gold/30 bg-gold/10 px-4 py-3 text-sm leading-relaxed text-gold">
                 <AlertCircleIcon className="mt-0.5 h-4 w-4 shrink-0" />
-                Your family organiser still needs to approve you. Save this link and come back
-                once they have.
+                The organiser of your {wording.groupWord} still needs to approve you. Save this
+                link and come back once they have.
               </p>
             ) : null}
 
             {isCreated ? (
               <p className="mt-5 rounded-2xl border border-gold/30 bg-gold/10 px-4 py-3 text-sm font-semibold leading-relaxed text-gold">
-                Next: add your wishes, then invite your family.
+                Next: add your wishes, then {wording.inviteButton.toLowerCase()}.
               </p>
             ) : null}
 
@@ -106,7 +107,7 @@ export default async function PersonalLinkPage({ searchParams }: PersonalLinkPag
 
             <p className="mt-4 flex items-start gap-2 text-sm leading-relaxed text-snow/60">
               <AlertCircleIcon className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
-              Lost it? Ask your family organiser for a new one.
+              Lost it? Ask the organiser of your {wording.groupWord} for a new one.
             </p>
 
             <div className="mt-auto pt-12">

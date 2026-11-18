@@ -13,9 +13,10 @@ import { RemoveMemberButton } from '@/app/_components/RemoveMemberButton';
 import { ReissueLinkButton } from '@/app/_components/ReissueLinkButton';
 import { RenameFamilyForm } from '@/app/_components/RenameFamilyForm';
 import { LockIcon, ChevronLeftIcon } from '@/app/_components/icons';
+import { capitaliseGroupWord, groupWording } from '@/lib/groupWording';
 
 export const metadata: Metadata = {
-  title: 'Family settings',
+  title: 'Group settings',
   robots: { index: false, follow: false },
 };
 
@@ -28,16 +29,18 @@ export default async function SettingsPage() {
 
   const data = await getSettingsData(viewer);
   const inviteUrl = `${await getAppBaseUrl()}/join/${viewer.family.inviteCode}`;
+  const wording = groupWording(viewer.family.groupType);
+  const groupWordTitle = capitaliseGroupWord(viewer.family.groupType);
 
   return (
     <main id="main">
       <PageHeaderBand
-        title="Family settings"
+        title={`${groupWordTitle} settings`}
         subtitle="You're the organiser. You can't see anyone's secret gifts."
         action={
           <Link
             href="/family"
-            aria-label="Back to family"
+            aria-label="Back to Home"
             className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-snow/10 text-snow transition-colors hover:bg-snow/15 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold lg:hidden"
           >
             <ChevronLeftIcon className="h-6 w-6" />
@@ -51,9 +54,12 @@ export default async function SettingsPage() {
           className="rounded-2xl border border-pine-100 bg-white p-5 shadow-sm sm:p-6 lg:col-start-1 lg:row-start-1"
         >
           <h2 id="family-settings-heading" className="text-lg font-extrabold text-ink">
-            Family
+            {groupWordTitle}
           </h2>
-          <RenameFamilyForm currentName={viewer.family.name} />
+          <RenameFamilyForm
+            currentName={viewer.family.name}
+            currentType={viewer.family.groupType}
+          />
 
           <div className="mt-5">
             <label htmlFor="invite-link" className="mb-2 block text-sm font-bold text-ink">
@@ -108,6 +114,7 @@ export default async function SettingsPage() {
                       memberId={member.id}
                       displayName={member.displayName}
                       variant="decline"
+                      groupWord={wording.groupWord}
                     />
                   </div>
                 </li>
@@ -157,6 +164,7 @@ export default async function SettingsPage() {
                     <RemoveMemberButton
                       memberId={member.id}
                       displayName={member.displayName}
+                      groupWord={wording.groupWord}
                     />
                   )}
                 </div>
@@ -182,11 +190,12 @@ export default async function SettingsPage() {
               </div>
             ) : (
               <p className="text-sm leading-relaxed text-muted">
-                There is no active event. Start one to give the family a fresh wish list.
+                There is no active event. Start one to give your {wording.groupWord} a fresh wish
+                list.
               </p>
             )}
             <div className="mt-4">
-              <EventActions activeEvent={data.activeEvent} />
+              <EventActions activeEvent={data.activeEvent} groupWord={wording.groupWord} />
             </div>
           </div>
         </section>
@@ -202,7 +211,7 @@ export default async function SettingsPage() {
           href="/family"
           className="inline-flex min-h-11 items-center rounded-full text-sm font-bold text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pine-900"
         >
-          Back to family
+          Back to Home
         </Link>
       </div>
     </main>

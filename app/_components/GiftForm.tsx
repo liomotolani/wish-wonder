@@ -10,6 +10,13 @@ import {
   StarIcon,
 } from '@/app/_components/icons';
 import { PRIORITY_REALLY_WANT, penceToPoundsInput, poundsToPence } from '@/lib/validation';
+import { compressPhoto } from '@/lib/compress-photo';
+import {
+  CURRENCIES,
+  DEFAULT_CURRENCY,
+  isCurrencyCode,
+  type CurrencyCode,
+} from '@/lib/currencies';
 import type { OwnGiftView } from '@/lib/types';
 
 interface GiftFormProps {
@@ -53,10 +60,14 @@ export function GiftForm({
     ? `/api/managed-members/${ownerMemberId}/gifts`
     : '/api/gifts';
   const initialPreferences = splitPreferences(gift?.preferences ?? null);
+  const initialCurrency: CurrencyCode = isCurrencyCode(gift?.currency)
+    ? gift.currency
+    : DEFAULT_CURRENCY;
 
   const [name, setName] = useState(gift?.name ?? '');
   const [description, setDescription] = useState(gift?.description ?? '');
   const [price, setPrice] = useState(penceToPoundsInput(gift?.pricePence ?? null));
+  const [currency, setCurrency] = useState<CurrencyCode>(initialCurrency);
   const [colour, setColour] = useState(initialPreferences.colour);
   const [size, setSize] = useState(initialPreferences.size);
   const [model, setModel] = useState(initialPreferences.model);
@@ -94,8 +105,9 @@ export function GiftForm({
     setUploading(true);
 
     try {
+      const uploadFile = await compressPhoto(file);
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', uploadFile, uploadFile.name);
       const response = await fetch('/api/gift-photos', {
         method: 'POST',
         body: formData,
@@ -146,6 +158,7 @@ export function GiftForm({
         body: JSON.stringify({
           name,
           description: description.trim() || null,
+          currency,
           pricePence,
           shopUrl: shopUrl.trim() || null,
           imageUrl: imageUrl.trim() || null,
@@ -308,7 +321,7 @@ export function GiftForm({
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label htmlFor="gift-price" className={LABEL_CLASS}>
-            Price (£)
+            Price
           </label>
           <input
             id="gift-price"
@@ -321,6 +334,27 @@ export function GiftForm({
             className={INPUT_CLASS}
           />
         </div>
+        <div>
+          <label htmlFor="gift-currency" className={LABEL_CLASS}>
+            Currency
+          </label>
+          <select
+            id="gift-currency"
+            name="currency"
+            value={currency}
+            onChange={(event) => setCurrency(event.target.value as CurrencyCode)}
+            className={INPUT_CLASS}
+          >
+            {CURRENCIES.map((option) => (
+              <option key={option.code} value={option.code}>
+                {option.code} {option.symbol}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
         <div>
           <label htmlFor="gift-size" className={LABEL_CLASS}>
             Size
@@ -336,9 +370,6 @@ export function GiftForm({
             className={INPUT_CLASS}
           />
         </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
         <div>
           <label htmlFor="gift-colour" className={LABEL_CLASS}>
             Colour
@@ -354,21 +385,22 @@ export function GiftForm({
             className={INPUT_CLASS}
           />
         </div>
-        <div>
-          <label htmlFor="gift-model" className={LABEL_CLASS}>
-            Model or other
-          </label>
-          <input
-            id="gift-model"
-            name="model"
-            type="text"
-            maxLength={100}
-            value={model}
-            onChange={(event) => setModel(event.target.value)}
-            placeholder="e.g. Air Max 90"
-            className={INPUT_CLASS}
-          />
-        </div>
+      </div>
+
+      <div>
+        <label htmlFor="gift-model" className={LABEL_CLASS}>
+          Model or other
+        </label>
+        <input
+          id="gift-model"
+          name="model"
+          type="text"
+          maxLength={100}
+          value={model}
+          onChange={(event) => setModel(event.target.value)}
+          placeholder="e.g. Air Max 90"
+          className={INPUT_CLASS}
+        />
       </div>
 
       <div>

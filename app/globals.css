@@ -49,6 +49,66 @@ body {
   background-size: 26px 26px;
 }
 
+/*
+ * Snowfall runs entirely on the compositor: fall, sway and twinkle are CSS
+ * transform/opacity keyframes, not per-frame JavaScript.
+ */
+@keyframes snow-fall {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, var(--snow-travel), 0);
+  }
+}
+
+@keyframes snow-drift {
+  from {
+    transform: translate3d(calc(var(--snow-sway) * -1), 0, 0)
+      rotate(calc(var(--snow-spin) * -1));
+  }
+  to {
+    transform: translate3d(var(--snow-sway), 0, 0) rotate(var(--snow-spin));
+  }
+}
+
+@keyframes snow-twinkle {
+  from {
+    opacity: var(--snow-opacity);
+  }
+  to {
+    opacity: calc(var(--snow-opacity) * 0.7);
+  }
+}
+
+.snow-piece {
+  animation: snow-fall var(--snow-duration) linear var(--snow-delay) infinite;
+}
+
+.snow-drift {
+  animation: snow-drift var(--snow-sway-duration) ease-in-out var(--snow-delay)
+    infinite alternate;
+}
+
+.snow-shape {
+  animation: snow-twinkle var(--snow-twinkle-duration) ease-in-out var(--snow-delay)
+    infinite alternate;
+}
+
+.snow-paused .snow-piece,
+.snow-paused .snow-drift,
+.snow-paused .snow-shape {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .snow-piece,
+  .snow-drift,
+  .snow-shape {
+    animation: none;
+  }
+}
+
 /* The soft gold bloom behind the opening gift box. Opacity is animated by Motion. */
 .reveal-glow-surface {
   background: radial-gradient(

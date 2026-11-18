@@ -55,7 +55,7 @@ export async function requireApiViewer(request: Request): Promise<ApiViewerResul
   if (viewer.member.status !== 'active') {
     return {
       ok: false,
-      response: apiError('Your place in the family is still waiting to be approved.', 403),
+      response: apiError('Your place in the group is still waiting to be approved.', 403),
     };
   }
 

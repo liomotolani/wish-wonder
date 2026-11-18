@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getViewerByToken } from '@/lib/auth';
 import {
+  addGroupSessionCookie,
   getAppBaseUrlFromRequest,
   isSecureRequest,
-  setSessionCookie,
 } from '@/lib/session';
 
 interface RouteContext {
@@ -28,6 +28,6 @@ export async function GET(
   const destination = viewer.member.status === 'pending' ? '/pending' : '/family';
   const response = NextResponse.redirect(new URL(destination, baseUrl));
   response.headers.set('Cache-Control', 'no-store');
-  setSessionCookie(response, token, isSecureRequest(request));
+  addGroupSessionCookie(response, request, viewer.family.id, token, isSecureRequest(request));
   return response;
 }

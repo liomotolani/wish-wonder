@@ -16,7 +16,11 @@ Wish & Wonder is a no-login, mobile-first web app where a family shares Christma
 
 ### Solution
 
-A shared family space opened from one WhatsApp link. Each member adds a wish list. Buyers pick a person, open numbered mystery boxes that each reveal one random available gift, and choose to claim it or try another number. Claims are enforced by the server and hidden from the recipient.
+A shared group space opened from one WhatsApp link, for a family, friends or colleagues. Each member adds a wish list. Buyers pick a person, open numbered mystery boxes that each reveal one random available gift, and choose to claim it or try another number. Claims are enforced by the server and hidden from the recipient.
+
+### Groups, not just families
+
+A group can be a family, friends, colleagues or something else. The organiser picks the type when creating it, and all wording adapts (FR-1a). In the code and database the group is still called a `family`; users never see that word unless their group is a family.
 
 ### Goals
 
@@ -49,7 +53,7 @@ Every member is both a wisher and a buyer; one member is also the organiser.
 
 ### Setup flow
 
-1. The organiser opens the site, taps **Create a Family** and enters a name such as "The Williams Family Christmas 2026".
+1. The organiser opens the site, taps **Start a group**, chooses who it's for (Family, Friends, Colleagues or Something else) and enters a name such as "The Williams Family Christmas 2026" or "Marketing Team Secret Santa".
 2. The app creates the family, makes the organiser its first member and shows a shareable invite link (for example `wishandwonder.app/join/<code>`).
 3. The organiser shares the invite link in the family WhatsApp group.
 4. Each person opens the link, taps **Join Family** and enters their name.
@@ -66,7 +70,9 @@ A buyer can loop through as many numbers as they like; the gift is only locked w
 
 | ID | As a | I want to | So that |
 | --- | --- | --- | --- |
-| US-1 | Organiser | create a family and get an invite link | I can bring everyone in with one message |
+| US-1 | Organiser | create a group and get an invite link | I can bring everyone in with one message |
+| US-1a | Organiser | say whether the group is for family, friends, colleagues or something else | the app talks to us in the right words |
+| US-1b | Member | belong to several groups on one phone and switch between them | I can use it with my family and my work Secret Santa |
 | US-2 | Family member | join from the invite link by entering my name | I do not need an account or password |
 | US-3 | Family member | come back later and be recognised | I can edit my list and see my claims |
 | US-3a | Family member | continue on another device, for example from my phone to a laptop | I can keep editing my list and see my claims anywhere |
@@ -84,11 +90,13 @@ A buyer can loop through as many numbers as they like; the gift is only locked w
 
 All requirements below are in scope for v1 unless marked otherwise.
 
-### Families and membership
+### Groups and membership
 
 | ID | Requirement |
 | --- | --- |
-| FR-1 | Anyone can create a family by entering a family name. The creator becomes the organiser. |
+| FR-1 | Anyone can create a group. They first choose who it's for (**Family**, **Friends**, **Colleagues** or **Something else**), then enter a group name. The creator becomes the organiser. |
+| FR-1a | Every user-facing label that names the group uses the wording for its type (see Group wording under Key copy). Before a group exists (landing page, Start and Join buttons) the wording is neutral: "group". |
+| FR-1b | **Several groups on one device:** a device remembers a separate sign-in for each group it has created or joined. Creating, joining, or opening a personal or device link adds that group and never signs the device out of another. A group switcher at the top of the dashboard lists the device's groups, with **Start or join another group**. A member can remove a group from this device without leaving it. The landing page offers "Continue to <group name>" for each remembered group. Each group's name, wish list and claims stay completely separate. |
 | FR-2 | The app creates a private family space and a shareable invite link with an unguessable code. |
 | FR-3 | Opening the invite link shows a Christmas-themed page with the family name and a **Join Family** button. Joining asks for the member's name, which must be unique within the family. The page also tells returning members: "Already in this family? Open your personal link on this device, or use **Use on another device** from a device you're already signed in on." |
 | FR-4 | Each member receives a private personal access link, separate from the invite link, which recognises them when they return without a password. The link is shown once, after joining. The app can't show it again, because only a hash of it is stored. |
@@ -134,7 +142,7 @@ All requirements below are in scope for v1 unless marked otherwise.
 
 | ID | Requirement |
 | --- | --- |
-| FR-40 | Edit the family name and copy the invite link. |
+| FR-40 | Edit the group name and type, and copy the invite link. Changing the type changes only the wording. |
 | FR-41 | Recover or replace a member's lost access link through an organiser-controlled process. Replacing it signs that member out on every device and gives them one new personal link. |
 | FR-42 | Optional join approval: the organiser approves new members before they join. |
 | FR-43 | Create a new Christmas event. |
@@ -200,7 +208,7 @@ The entities come from the brief; the columns are a proposal.
 
 | Table | Key columns |
 | --- | --- |
-| `families` | id, name, invite\_code, organiser\_member\_id, requires\_approval, created\_at |
+| `families` | id, name, group\_type (family, friends, colleagues, other; existing rows default to family), invite\_code, organiser\_member\_id, requires\_approval, created\_at. Called "group" in the UI. |
 | `events` | id, family\_id, name (for example "Christmas 2026"), status (active, archived), created\_at |
 | `members` | id, family\_id, display\_name (unique per family), managed\_by\_member\_id (for people without a phone), status (pending, active), created\_at |
 | `member_sessions` | id, member\_id, token\_hash, created\_at, revoked\_at (one row per signed-in device) |
@@ -259,13 +267,13 @@ Six pages, designed mobile first for a link opened from WhatsApp, warm and festi
 
 | Page | Purpose | Key elements |
 | --- | --- | --- |
-| Welcome | Explain the idea and start | The three main actions (create your wishlist, reveal mystery gifts, surprise your loved ones), **Create a Family**, **Join a Family** |
-| Family Dashboard | Home screen | Family name, Christmas countdown, family members with **Pick a Gift**, add or invite members, My Wishlist, My Secret Gifts, **Share Family Link** |
+| Welcome | Explain the idea and start | The three main actions (create your wishlist, reveal mystery gifts, surprise your loved ones), **Start a group**, **Join a group** |
+| Dashboard | Home screen | Group switcher, group name, Christmas countdown, family members with **Pick a Gift**, add or invite members, My Wishlist, My Secret Gifts, the invite button (wording by group type) |
 | My Wishlist | Manage own gifts | Add, edit, remove; product URL, photo, estimated price, preferences or notes. No claim status. |
 | Mystery Gift Picker | The signature page | Recipient's name, numbered mystery gifts, opening animation, gift details, **I'll Buy This**, **Try Another Number**, clear unavailable messages |
 | My Secret Gifts | Track claims | Everything the member has claimed with status, product information, shop link, **Mark Purchased**, **Release** |
 | Use on Another Device | Sign in a second device | One-time link and QR code, a 15-minute countdown, **Copy link**, and a note that it works once |
-| Family Settings | Organiser only | Edit family name, copy invite link, manage membership, approve members if enabled, create a new event, close or archive an old one |
+| Group Settings | Organiser only | Edit group name and type, copy invite link, manage membership, approve members if enabled, create a new event, close or archive an old one |
 
 ### Design requirements
 
@@ -282,6 +290,16 @@ Six pages, designed mobile first for a link opened from WhatsApp, warm and festi
 - Conflict: a friendly "Already picked" message.
 - Empty picker: a message that there are currently no gifts left to choose.
 
+### Group wording
+
+| Where it shows | Family | Friends | Colleagues | Something else |
+| --- | --- | --- | --- | --- |
+| Group word | family | friends | team | group |
+| Invite button | Invite your family | Invite your friends | Invite your team | Invite people |
+| Empty dashboard | Share the link so everyone in the family can add their wishes | Share the link so all your friends can add their wishes | Share the link so everyone on the team can add their wishes | Share the link so everyone can add their wishes |
+| Join page | You're invited to join the family | You're invited by your friends | You're invited to join the team | You're invited to join |
+| Name example | e.g. Williams Family Christmas | e.g. Uni Friends Christmas | e.g. Marketing Team Secret Santa | e.g. Book Club Christmas |
+
 ## Edge cases
 
 | Case | Expected behaviour |
@@ -295,6 +313,7 @@ Six pages, designed mobile first for a link opened from WhatsApp, warm and festi
 | Member loses their personal link | The organiser recovers or replaces it, which signs them out on every device (FR-41). |
 | Member moves from phone to laptop | They open **Use on another device** on the phone and open the link or QR code on the laptop. Both stay signed in (FR-4a). |
 | A returning member opens the invite link | The join page points them to their personal link or a device link instead of joining twice (FR-3). |
+| Someone creates or joins a second group on the same phone | It's added to the group switcher. They stay signed in to their first group (FR-1b). |
 | A device link is used twice or after 15 minutes | It shows "This link no longer works" and nothing changes (FR-4a). |
 
 ## Success metrics
@@ -310,7 +329,7 @@ The brief sets no targets. These are proposed measures; targets are still to agr
 
 ## Future features
 
-Only after the core Christmas experience works reliably: gift budgets, "Most Wanted / Would Love / Nice to Have" preferences, multiple families per person, gift history, birthday mode, other occasions (weddings, baby showers, anniversaries), holiday themes and shopping reminders.
+Only after the core Christmas experience works reliably: gift budgets, "Most Wanted / Would Love / Nice to Have" preferences, gift history, birthday mode, other occasions (weddings, baby showers, anniversaries), holiday themes and shopping reminders.
 
 ## Decisions and open questions
 
@@ -326,6 +345,9 @@ Only after the core Christmas experience works reliably: gift budgets, "Most Wan
 | Limit on claims per recipient | No limit (FR-24) |
 | Number-to-gift mapping | Reshuffles on every visit (FR-22) |
 | Released claims | Disappear from My Secret Gifts (FR-30) |
+| Group types | Family, Friends, Colleagues, Something else; chosen at creation, changeable by the organiser (FR-1, FR-40) |
+| Several groups on one device | Yes, with a group switcher (FR-1b) |
+| Internal naming | Code and database keep `family`; users see their group's wording (FR-1a) |
 | Same member on several devices | One-time device links; each device has its own session (FR-4a) |
 | Replacing a lost link | Signs the member out on every device (FR-41) |
 

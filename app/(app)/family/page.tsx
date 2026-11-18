@@ -3,9 +3,14 @@ import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { getAppBaseUrl, getViewer, requireViewer } from '@/lib/session';
 import { daysUntilChristmas } from '@/lib/dates';
+import { getRequestTimeZone } from '@/lib/timezone';
 import { WELCOME_COOKIE_NAME } from '@/lib/tokens';
 import { getDashboardData } from '@/lib/db/dashboard';
+import { listDeviceGroups } from '@/lib/db/device-groups';
+import { groupWording } from '@/lib/groupWording';
 import { Bauble } from '@/app/_components/Bauble';
+import { GroupSwitcher } from '@/app/_components/GroupSwitcher';
+import { PendingApprovalsWatcher } from '@/app/_components/PendingApprovalsWatcher';
 import { ApproveMemberButton } from '@/app/_components/ApproveMemberButton';
 import { ShareFamilyLink } from '@/app/_components/CopyButton';
 import { NoActiveEventNotice } from '@/app/_components/NoActiveEventNotice';
@@ -22,7 +27,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const viewer = await getViewer();
 
   return {
-    title: viewer ? viewer.family.name : 'Family',
+    title: viewer ? viewer.family.name : 'Home',
     robots: { index: false, follow: false },
   };
 }
@@ -33,7 +38,10 @@ const SHARE_BUTTON_CLASS =
 export default async function FamilyPage() {
   const viewer = await requireViewer();
   const data = await getDashboardData(viewer);
-  const days = daysUntilChristmas();
+  const groups = await listDeviceGroups();
+  const wording = groupWording(viewer.family.groupType);
+  const timeZone = await getRequestTimeZone();
+  const days = daysUntilChristmas(new Date(), timeZone);
   const firstVisit =
     (await cookies()).get(WELCOME_COOKIE_NAME)?.value === '1';
   const inviteUrl = `${await getAppBaseUrl()}/join/${viewer.family.inviteCode}`;
@@ -46,6 +54,9 @@ export default async function FamilyPage() {
 
   return (
     <main id="main">
+      {isOrganiser ? (
+        <PendingApprovalsWatcher initialCount={data.pendingMembers.length} />
+      ) : null}
       <section className="relative isolate overflow-hidden rounded-b-[28px] bg-pine-900 text-snow lg:mx-auto lg:mt-8 lg:max-w-6xl lg:rounded-[28px]">
         <span
           className="snow-dots pointer-events-none absolute inset-0 opacity-70"
@@ -64,8 +75,8 @@ export default async function FamilyPage() {
               {isOrganiser ? (
                 <Link
                   href="/settings"
-                  aria-label="Family settings"
-                  title="Family settings"
+                  aria-label="Group settings"
+                  title="Group settings"
                   className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-snow/10 text-snow transition-colors hover:bg-snow/15 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
                 >
                   <SettingsIcon className="h-5 w-5" />
@@ -74,19 +85,23 @@ export default async function FamilyPage() {
             </div>
           </div>
 
-          <p className="mt-5 text-xs font-bold uppercase tracking-[0.16em] text-gold">
-            {familyLabel}
-          </p>
+          <div className="mt-4 lg:hidden">
+            <GroupSwitcher label={familyLabel} groups={groups} variant="hero" />
+          </div>
 
           <div className="mt-3 flex items-center justify-between gap-4">
-            <ChristmasCountdown initialDays={days} />
+            <ChristmasCountdown initialDays={days} timeZone={timeZone} />
             <div className="hidden sm:block">
               <div className="flex flex-col items-end gap-1.5">
-                <ShareFamilyLink
-                  url={inviteUrl}
-                  familyName={viewer.family.name}
-                  className={SHARE_BUTTON_CLASS}
-                />
+                {isOrganiser ? (
+                  <ShareFamilyLink
+                    url={inviteUrl}
+                    familyName={viewer.family.name}
+                    groupWord={wording.groupWord}
+                    label={wording.inviteButton}
+                    className={SHARE_BUTTON_CLASS}
+                  />
+                ) : null}
                 <Link
                   href="/device"
                   className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-2 text-sm font-semibold text-snow/70 hover:text-snow focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
@@ -99,14 +114,18 @@ export default async function FamilyPage() {
           </div>
 
           <div className="mt-5 sm:hidden">
-            <ShareFamilyLink
-              url={inviteUrl}
-              familyName={viewer.family.name}
-              className={`${SHARE_BUTTON_CLASS} w-full`}
-            />
+            {isOrganiser ? (
+              <ShareFamilyLink
+                url={inviteUrl}
+                familyName={viewer.family.name}
+                groupWord={wording.groupWord}
+                label={wording.inviteButton}
+                className={`${SHARE_BUTTON_CLASS} w-full`}
+              />
+            ) : null}
             <Link
               href="/device"
-              className="mt-2 flex min-h-11 items-center justify-center gap-1.5 rounded-full text-sm font-semibold text-snow/70 hover:text-snow focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+              className={`${isOrganiser ? 'mt-2' : ''} flex min-h-11 items-center justify-center gap-1.5 rounded-full text-sm font-semibold text-snow/70 hover:text-snow focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold`}
             >
               <DeviceIcon className="h-4 w-4" />
               Use on another device
@@ -133,7 +152,7 @@ export default async function FamilyPage() {
                 </h2>
                 <p className="mt-1 text-sm leading-relaxed text-muted">
                   {data.pendingMembers.length === 1
-                    ? `${data.pendingMembers[0].displayName} would like to join the family.`
+                    ? `${data.pendingMembers[0].displayName} would like to join your ${wording.groupWord}.`
                     : 'Approve them so they can add their wishes and join in.'}
                 </p>
               </div>
@@ -186,19 +205,24 @@ export default async function FamilyPage() {
             <h2 className="text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">
               Who are you buying for?
             </h2>
-            <ShareFamilyLink
-              url={inviteUrl}
-              familyName={viewer.family.name}
-              label="+ Invite"
-              className="inline-flex min-h-11 items-center rounded-full px-2 text-sm font-bold text-cranberry-ink hover:text-cranberry focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pine-900"
-            />
+            {isOrganiser ? (
+              <ShareFamilyLink
+                url={inviteUrl}
+                familyName={viewer.family.name}
+                groupWord={wording.groupWord}
+                label="+ Invite"
+                className="inline-flex min-h-11 items-center rounded-full px-2 text-sm font-bold text-cranberry-ink hover:text-cranberry focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pine-900"
+              />
+            ) : null}
           </div>
 
           {data.members.length === 0 ? (
             <div className="mt-4 rounded-2xl border border-pine-100 bg-white p-6 text-center">
               <p className="text-base font-bold text-ink">You&apos;re the first one here</p>
               <p className="mt-1 text-sm leading-relaxed text-muted">
-                Share the family link so everyone can add their wishes.
+                {isOrganiser
+                  ? wording.emptyDashboard
+                  : 'The organiser will share the link so everyone can add their wishes.'}
               </p>
             </div>
           ) : (
