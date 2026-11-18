@@ -7,6 +7,7 @@ import { POST as giftPhotoRoute } from '@/app/api/gift-photos/route';
 import { POST as reissueLinkRoute } from '@/app/api/organiser/members/[id]/reissue-link/route';
 import { GET as useDeviceLinkRoute } from '@/app/device/[token]/route';
 import { createAdminClient } from '@/lib/db/client';
+import { parseDeviceSessions } from '@/lib/device-sessions';
 import {
   getOrCreatePickerVisit,
   getReveal,
@@ -30,6 +31,73 @@ afterAll(async () => {
 });
 
 describe('HTTP endpoints', () => {
+  it('rejects an unknown group type before creating anything', async () => {
+    const response = await createFamilyRoute(
+      new Request('http://localhost/api/families', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          familyName: 'Should Not Exist',
+          groupType: 'team',
+          memberName: 'Mum',
+          requiresApproval: false,
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    const { data } = await createAdminClient()
+      .from('families')
+      .select('id')
+      .eq('name', 'Should Not Exist');
+    expect(data).toHaveLength(0);
+  });
+
+  it('sends an existing device straight to the dashboard when starting another group', async () => {
+    const firstName = `First Group ${crypto.randomUUID().slice(0, 8)}`;
+    const secondName = `Second Group ${crypto.randomUUID().slice(0, 8)}`;
+    createdFamilyNames.push(firstName, secondName);
+
+    const first = await createFamilyRoute(
+      new Request('http://localhost/api/families', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          familyName: firstName,
+          memberName: 'Mum',
+          requiresApproval: false,
+        }),
+      }),
+    );
+    const firstCookie = first.headers.get('set-cookie') ?? '';
+    const deviceCookie = firstCookie.match(/ww_groups=([^;]+)/)?.[1];
+    expect(deviceCookie).toBeTruthy();
+
+    const second = await createFamilyRoute(
+      new Request('http://localhost/api/families', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          cookie: `ww_groups=${deviceCookie}`,
+        },
+        body: JSON.stringify({
+          familyName: secondName,
+          memberName: 'Mum',
+          requiresApproval: false,
+        }),
+      }),
+    );
+
+    expect(second.status).toBe(201);
+    const data = (await second.json()) as { next: string };
+    expect(data.next).toBe('/family');
+
+    const secondCookie = second.headers.get('set-cookie') ?? '';
+    const nextDeviceCookie = secondCookie.match(/ww_groups=([^;]+)/)?.[1];
+    const sessions = parseDeviceSessions(nextDeviceCookie);
+    expect(Object.keys(sessions?.sessions ?? {})).toHaveLength(2);
+  });
+
   it('creates a family, sets an httpOnly cookie and returns only safe member data', async () => {
     const familyName = `API Family ${crypto.randomUUID().slice(0, 8)}`;
     createdFamilyNames.push(familyName);
@@ -49,12 +117,14 @@ describe('HTTP endpoints', () => {
     expect(response.status).toBe(201);
     const data = (await response.json()) as {
       personalLink: string;
+      inviteLink: string;
       next: string;
       memberName: string;
     };
     expect(data.memberName).toBe('Mum');
     expect(data.personalLink).toMatch(/\/me\/[A-Za-z0-9_-]{43}$/);
-    expect(data.next).toBe('/personal-link?created=1');
+    expect(data.inviteLink).toMatch(/\/join\/[a-f0-9]{16}$/);
+    expect(data.next).toBe('/group-link?created=1');
 
     const cookie = response.headers.get('set-cookie') ?? '';
     expect(cookie).toContain('HttpOnly');
@@ -186,16 +256,20 @@ describe('HTTP endpoints', () => {
 
       const cookie = useResponse.headers.get('set-cookie') ?? '';
       expect(cookie).toContain('HttpOnly');
-      const sessionToken = cookie.match(/ww_member=([^;]+)/)?.[1];
-      expect(sessionToken).toBeTruthy();
+      const cookieValue = cookie.match(/ww_groups=([^;]+)/)?.[1];
+      expect(cookieValue).toBeTruthy();
 
-      if (!sessionToken) {
+      if (!cookieValue) {
         return;
       }
 
+      const sessions = parseDeviceSessions(cookieValue);
+      expect(sessions?.active).toBe(family.familyId);
+      expect(sessions?.sessions[family.familyId]).toBeTruthy();
+
       const meResponse = await meRoute(
         new Request('http://localhost/api/me', {
-          headers: { cookie: `ww_member=${sessionToken}` },
+          headers: { cookie: `ww_groups=${cookieValue}` },
         }),
       );
       expect(meResponse.status).toBe(200);

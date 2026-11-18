@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { redeemDeviceLinkRecord } from '@/lib/db/device-links';
 import {
+  addGroupSessionCookie,
   getAppBaseUrlFromRequest,
   isSecureRequest,
-  setSessionCookie,
 } from '@/lib/session';
 import {
   createPersonalToken,
@@ -42,7 +42,13 @@ export async function GET(
       new URL(destination, getAppBaseUrlFromRequest(request)),
     );
     response.headers.set('Cache-Control', 'no-store');
-    setSessionCookie(response, sessionToken, isSecureRequest(request));
+    addGroupSessionCookie(
+      response,
+      request,
+      result.familyId,
+      sessionToken,
+      isSecureRequest(request),
+    );
     return response;
   } catch {
     console.error('Could not use device link.');

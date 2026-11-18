@@ -7,7 +7,6 @@ import { formatPrice, preferenceChips } from '@/lib/format';
 import { mysteryToneFor } from '@/lib/mystery-tone';
 import type { RevealedGiftView } from '@/lib/types';
 import { PRIORITY_REALLY_WANT } from '@/lib/validation';
-import { Bauble } from '@/app/_components/Bauble';
 import { ClaimGiftButton } from '@/app/_components/ClaimGiftButton';
 import { GiftPlaceholder } from '@/app/_components/GiftPlaceholder';
 import { RevealScene, Snowfall } from '@/app/_components/motion';
@@ -29,6 +28,7 @@ interface RevealExperienceProps {
   memberId: string;
   number: number;
   visitId: string;
+  groupWord: string;
 }
 
 function RevealTopBar({
@@ -68,7 +68,7 @@ function RevealGiftCard({
   visitId: string;
   backHref: string;
 }) {
-  const price = formatPrice(gift.pricePence);
+  const price = formatPrice(gift.pricePence, gift.currency);
   const chips = preferenceChips(gift.preferences);
   const isPriority = gift.priority === PRIORITY_REALLY_WANT;
 
@@ -175,11 +175,6 @@ function RevealGiftCard({
             backHref={backHref}
           />
         </div>
-
-        <div className="mt-4 hidden items-center gap-2 text-xs text-muted lg:flex">
-          <Bauble name={recipientName} className="scale-75" />
-          {recipientName} can&apos;t see this page.
-        </div>
       </div>
     </div>
   );
@@ -283,13 +278,13 @@ function ErrorState({
       </span>
       <h1 className="mt-6 text-2xl font-extrabold tracking-tight">Start again from the picker</h1>
       <p className="mt-2 max-w-sm text-sm leading-relaxed text-snow/65">
-        That picker has expired. Head back to the family page and open a fresh set of numbers.
+        That picker has expired. Head back to the Home page and open a fresh set of numbers.
       </p>
       <Link
         href="/family"
         className="mt-7 inline-flex min-h-14 w-full max-w-sm items-center justify-center rounded-full bg-cranberry px-6 text-base font-bold text-white hover:bg-cranberry-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
       >
-        Back to family
+        Back to Home
       </Link>
     </div>
   );
@@ -300,7 +295,7 @@ function ErrorState({
  * The picker starts the request on tap, so on the normal path this screen has
  * the gift before the lid comes off; a direct visit falls back to its own call.
  */
-export function RevealExperience({ memberId, number, visitId }: RevealExperienceProps) {
+export function RevealExperience({ memberId, number, visitId, groupWord }: RevealExperienceProps) {
   const [response, setResponse] = useState<RevealResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const backHref = `/pick/${memberId}?visit=${visitId}`;
@@ -332,7 +327,7 @@ export function RevealExperience({ memberId, number, visitId }: RevealExperience
     });
   }
 
-  const displayName = response?.recipientName ?? 'your family member';
+  const displayName = response?.recipientName ?? `someone in your ${groupWord}`;
 
   return (
     <div className="theme-dark min-h-screen bg-pine-900 text-snow">
@@ -351,7 +346,7 @@ export function RevealExperience({ memberId, number, visitId }: RevealExperience
                 <RevealGiftCard
                   gift={response.gift}
                   number={number}
-                  recipientName={response.recipientName ?? 'your family member'}
+                  recipientName={response.recipientName ?? `someone in your ${groupWord}`}
                   visitId={visitId}
                   backHref={backHref}
                 />

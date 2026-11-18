@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
   daysUntilChristmas,
   christmasYear,
+  dateKeyInTimeZone,
   londonDateKey,
   msUntilNextLondonMidnight,
+  msUntilNextMidnight,
 } from '@/lib/dates';
 import {
   formatPrice,
@@ -28,6 +30,9 @@ describe('prices and copy helpers', () => {
     expect(formatPrice(9500)).toBe('£95');
     expect(formatPrice(0)).toBe('£0');
     expect(formatPrice(null)).toBeNull();
+    expect(formatPrice(9500, 'USD')).toBe('US$95');
+    expect(formatPrice(9550, 'AUD')).toBe('A$95.50');
+    expect(formatPrice(9500, 'not-a-currency')).toBe('£95');
   });
 
   it('formats part pounds with pence', () => {
@@ -113,6 +118,18 @@ describe('Christmas countdown', () => {
     expect(msUntilNextLondonMidnight(new Date('2026-11-17T12:00:00Z'))).toBe(12 * 60 * 60 * 1000);
     expect(msUntilNextLondonMidnight(new Date('2026-07-01T12:00:00Z'))).toBe(11 * 60 * 60 * 1000);
     expect(msUntilNextLondonMidnight(new Date('2026-11-17T23:59:30Z'))).toBe(30 * 1000);
+  });
+
+  it('follows the visitor timezone when one is supplied', () => {
+    const instant = new Date('2026-12-24T20:00:00Z');
+
+    expect(daysUntilChristmas(instant, 'Europe/London')).toBe(1);
+    expect(daysUntilChristmas(instant, 'Australia/Sydney')).toBe(0);
+    expect(dateKeyInTimeZone(instant, 'Europe/London')).toBe('2026-12-24');
+    expect(dateKeyInTimeZone(instant, 'Australia/Sydney')).toBe('2026-12-25');
+    expect(msUntilNextMidnight(new Date('2026-11-17T12:00:00Z'), 'Australia/Sydney')).toBe(
+      60 * 60 * 1000,
+    );
   });
 });
 

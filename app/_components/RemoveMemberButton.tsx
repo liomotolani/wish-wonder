@@ -9,12 +9,14 @@ interface RemoveMemberButtonProps {
   memberId: string;
   displayName: string;
   variant?: 'remove' | 'decline';
+  groupWord?: string;
 }
 
 export function RemoveMemberButton({
   memberId,
   displayName,
   variant = 'remove',
+  groupWord = 'group',
 }: RemoveMemberButtonProps) {
   const router = useRouter();
   const dialog = useRef<HTMLDialogElement>(null);
@@ -98,7 +100,7 @@ export function RemoveMemberButton({
 
           <p className="mt-3 text-sm leading-relaxed text-muted">
             {isDecline
-              ? `${displayName} won't be able to join this family. They can ask for the invite link again.`
+              ? `${displayName} won't be able to join this ${groupWord}. They can ask for the invite link again.`
               : `${displayName}'s wish list and reservations will be deleted. Anyone who had reserved one of their gifts will be told it is no longer available.`}
           </p>
 

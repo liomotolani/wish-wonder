@@ -34,7 +34,7 @@ export function Logo({ href = '/', tone = 'dark', size = 'md' }: LogoProps) {
         </svg>
       </span>
       <span
-        className={`font-extrabold tracking-tight ${
+        className={`whitespace-nowrap font-extrabold tracking-tight ${
           size === 'sm' ? 'text-base' : 'text-lg sm:text-xl'
         } ${isDark ? 'text-snow' : 'text-pine-900'}`}
       >

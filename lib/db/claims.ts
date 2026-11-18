@@ -1,5 +1,6 @@
 import 'server-only';
 import { createAdminClient } from '@/lib/db/client';
+import { DEFAULT_CURRENCY, isCurrencyCode } from '@/lib/currencies';
 import type {
   ClaimedGiftView,
   ClaimStatus,
@@ -26,6 +27,7 @@ function snapshotToGift(snapshot: Json | null): ClaimedGiftView {
       name: 'Gift details unavailable',
       description: null,
       imageUrl: null,
+      currency: DEFAULT_CURRENCY,
       pricePence: null,
       shopUrl: null,
       preferences: null,
@@ -37,6 +39,7 @@ function snapshotToGift(snapshot: Json | null): ClaimedGiftView {
     name: stringOrNull(snapshot.name) ?? 'Gift details unavailable',
     description: stringOrNull(snapshot.description),
     imageUrl: stringOrNull(snapshot.image_url),
+    currency: isCurrencyCode(snapshot.currency) ? snapshot.currency : DEFAULT_CURRENCY,
     pricePence: numberOrNull(snapshot.price_pence),
     shopUrl: stringOrNull(snapshot.shop_url),
     preferences: stringOrNull(snapshot.preferences),

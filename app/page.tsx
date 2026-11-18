@@ -8,7 +8,7 @@ import { getViewer } from '@/lib/session';
 
 export const metadata: Metadata = {
   title: {
-    absolute: 'Wish & Wonder — Family Christmas wish lists',
+    absolute: 'Wish & Wonder — Christmas wish lists for groups',
   },
 };
 
@@ -48,10 +48,10 @@ export default async function Home() {
             {viewer ? (
               <Link
                 href="/family"
-                className="inline-flex min-h-11 items-center gap-2 rounded-full bg-snow/10 px-4 text-sm font-bold text-snow transition-colors hover:bg-snow/15 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+                className="inline-flex min-h-11 max-w-[11rem] items-center gap-2 rounded-full bg-snow/10 px-2.5 text-xs font-bold text-snow transition-colors hover:bg-snow/15 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold sm:max-w-[26rem] sm:px-4 sm:text-sm"
               >
-                Continue as {viewer.member.displayName}
-                <ArrowRightIcon className="h-4 w-4" />
+                <span className="truncate">Continue to {viewer.family.name}</span>
+                <ArrowRightIcon className="h-4 w-4 shrink-0" />
               </Link>
             ) : (
               <Link
@@ -81,15 +81,15 @@ export default async function Home() {
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
                 <Link
                   href="/create"
-                  className="inline-flex min-h-14 items-center justify-center rounded-full bg-cranberry px-8 text-base font-bold text-white transition-colors hover:bg-cranberry-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+                  className="inline-flex min-h-14 items-center justify-center whitespace-nowrap rounded-full bg-cranberry px-8 text-base font-bold text-white transition-colors hover:bg-cranberry-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
                 >
-                  Create a Family
+                  Start a group
                 </Link>
                 <Link
                   href="/join"
-                  className="inline-flex min-h-14 items-center justify-center rounded-full border border-snow/25 px-8 text-base font-bold text-snow transition-colors hover:bg-snow/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+                  className="inline-flex min-h-14 items-center justify-center whitespace-nowrap rounded-full border border-snow/25 px-8 text-base font-bold text-snow transition-colors hover:bg-snow/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
                 >
-                  Join with a link
+                  Join a group
                 </Link>
               </div>
             </div>

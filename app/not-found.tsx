@@ -15,14 +15,14 @@ export default function NotFound() {
               We couldn&apos;t find that page
             </h1>
             <p className="mt-4 text-base leading-relaxed text-snow/70">
-              The link may be old, or the gift may have been removed. Head back to your family
+              The link may be old, or the gift may have been removed. Head back to the Home
               page and try again.
             </p>
             <Link
               href="/family"
               className="mt-8 inline-flex min-h-14 w-fit items-center justify-center rounded-full bg-cranberry px-7 text-base font-bold text-white hover:bg-cranberry-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
             >
-              Back to family
+              Back to Home
             </Link>
           </main>
         </div>

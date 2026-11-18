@@ -22,8 +22,8 @@ export default function LinkExpiredPage() {
               This link no longer works
             </h1>
             <p className="mt-4 text-base leading-relaxed text-snow/70">
-              Ask your family organiser for a new personal link. They can make one for you from
-              the family page.
+              Ask your group organiser for a new personal link. They can make one for you from
+              the home page.
             </p>
             <Link
               href="/"

@@ -106,7 +106,7 @@ export default async function SecretGiftsPage() {
           <>
             <StaggerList className="space-y-4 lg:hidden">
               {claims.map((claim) => {
-                const price = formatPrice(claim.gift.pricePence);
+                const price = formatPrice(claim.gift.pricePence, claim.gift.currency);
                 const summary = giftSummary(claim.gift.preferences, claim.gift.description);
 
                 return (
@@ -178,7 +178,7 @@ export default async function SecretGiftsPage() {
                 </thead>
                 <StaggerList as="tbody" className="divide-y divide-pine-100">
                   {claims.map((claim) => {
-                    const price = formatPrice(claim.gift.pricePence);
+                    const price = formatPrice(claim.gift.pricePence, claim.gift.currency);
                     const summary = giftSummary(
                       claim.gift.preferences,
                       claim.gift.description,

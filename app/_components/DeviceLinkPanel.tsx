@@ -202,7 +202,7 @@ export function DeviceLinkPanel() {
               href="/family"
               className="inline-flex min-h-12 items-center justify-center rounded-full border border-pine-100 px-6 text-sm font-bold text-ink hover:bg-pine-100/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pine-900"
             >
-              Back to family
+              Back to Home
             </Link>
           </div>
         </div>
@@ -215,7 +215,7 @@ export function DeviceLinkPanel() {
       <div className="mx-auto flex w-full max-w-xl flex-1 flex-col px-5 pb-10 pt-6 sm:px-8 lg:hidden">
         <Link
           href="/family"
-          aria-label="Back to family"
+          aria-label="Back to Home"
           className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-snow/10 text-snow transition-colors hover:bg-snow/15 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
         >
           <ChevronLeftIcon className="h-6 w-6" />
@@ -272,7 +272,7 @@ export function DeviceLinkPanel() {
               className="inline-flex min-h-11 w-fit items-center gap-1 text-sm font-bold text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pine-900"
             >
               <ChevronLeftIcon className="h-4 w-4" />
-              Back to family
+              Back to Home
             </Link>
 
             <h1 className="mt-4 text-4xl font-extrabold leading-tight tracking-tight">

@@ -40,7 +40,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     );
 
     if (!visit) {
-      return apiError('That picker has expired. Start again from the family page.', 404);
+      return apiError('That picker has expired. Start again from the Home page.', 404);
     }
 
     if (visit.recipientMemberId === auth.viewer.member.id) {

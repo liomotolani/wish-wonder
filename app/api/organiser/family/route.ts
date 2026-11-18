@@ -20,7 +20,7 @@ export async function PATCH(request: Request): Promise<NextResponse> {
   }
 
   if (auth.viewer.family.organiserMemberId !== auth.viewer.member.id) {
-    return apiError('Only the organiser can change family settings.', 403);
+    return apiError('Only the organiser can change group settings.', 403);
   }
 
   const body = await readJsonBody(request);
@@ -35,11 +35,12 @@ export async function PATCH(request: Request): Promise<NextResponse> {
       familyId: auth.viewer.family.id,
       organiserMemberId: auth.viewer.member.id,
       name: parsed.data.name,
+      groupType: parsed.data.groupType,
       requiresApproval: parsed.data.requiresApproval,
     });
 
     if (result === 'not_allowed') {
-      return apiError('Only the organiser can change family settings.', 403);
+      return apiError('Only the organiser can change group settings.', 403);
     }
 
     revalidateViews(

@@ -15,5 +15,6 @@ description: "Wording, spelling and currency rules for anything users read"
   - **Release**: give a claim back.
   - **Taken**: a number someone else has claimed.
   - **Personal link**: a member's private sign-in link.
+- Never hard-code "family" in text users read. Get the group word, invite text and examples from the shared group-wording helper, using the group's type. With no group yet, say "group". The PRD's Group wording table is the source.
 - Never write copy that hints at who claimed something or what was claimed, except to the claimer.
 - Button labels follow the PRD: "Pick a Gift", "I'll Buy This", "Try Another Number", "Mark Purchased", "Release". Where a mockup's wording differs, the PRD wins.

@@ -9,6 +9,7 @@ describe('Domain types smoke test', () => {
     const sampleFamily: Family = {
       id: '123e4567-e89b-12d3-a456-426614174000',
       name: 'The Williams Family',
+      group_type: 'family',
       invite_code: 'WILLIAMS2026',
       organiser_member_id: null,
       requires_approval: true,
@@ -44,6 +45,7 @@ describe('Domain types smoke test', () => {
       name: 'Nike Air Max Trainers',
       description: 'Black, size 6',
       image_url: null,
+      currency: 'GBP',
       price_pence: 9500,
       shop_url: null,
       preferences: 'Black',
@@ -59,6 +61,7 @@ describe('Domain types smoke test', () => {
       status: 'reserved',
       gift_snapshot: {
         name: sampleGift.name,
+        currency: sampleGift.currency,
         price_pence: sampleGift.price_pence,
       },
       claimed_at: new Date().toISOString(),

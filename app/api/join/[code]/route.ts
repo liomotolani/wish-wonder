@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server';
 import { apiError, noStoreJson, readJsonBody } from '@/lib/api';
 import { joinFamilyRecord } from '@/lib/db/families';
 import {
+  addGroupSessionCookie,
   getAppBaseUrlFromRequest,
   isSecureRequest,
-  setSessionCookie,
   setWelcomeCookie,
 } from '@/lib/session';
 import {
@@ -16,11 +16,16 @@ import {
   inviteCodeSchema,
   joinFamilySchema,
 } from '@/lib/validation';
+import { allowApiRequest } from '@/lib/rate-limit';
 
 export async function POST(
   request: Request,
   context: { params: Promise<{ code: string }> },
 ): Promise<NextResponse> {
+  if (!(await allowApiRequest(request, 'join_group', 60, 10 * 60))) {
+    return apiError('That is a lot of tries. Please wait a little while and try again.', 429);
+  }
+
   const { code } = await context.params;
   const parsedCode = inviteCodeSchema.safeParse(code);
 
@@ -47,7 +52,7 @@ export async function POST(
     if (!result.ok) {
       if (result.reason === 'name_taken') {
         return apiError(
-          'Someone in the family already uses that name. Try another one.',
+          'Someone in this group already uses that name. Try another one.',
           409,
         );
       }
@@ -69,7 +74,7 @@ export async function POST(
       { status: 201 },
     );
     const secure = isSecureRequest(request);
-    setSessionCookie(response, token, secure);
+    addGroupSessionCookie(response, request, result.familyId, token, secure);
     setWelcomeCookie(response, secure);
     return response;
   } catch {

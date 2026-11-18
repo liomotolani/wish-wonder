@@ -1,12 +1,17 @@
 import 'server-only';
 import { cache } from 'react';
-import { cookies, headers } from 'next/headers';
+import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import type { NextResponse } from 'next/server';
 import { getViewerByToken } from '@/lib/auth';
+import { activeSessionToken, addDeviceSession } from '@/lib/device-sessions';
 import {
-  SESSION_COOKIE_NAME,
-  SESSION_MAX_AGE_SECONDS,
+  readDeviceSessions,
+  readLegacySessionTokenFromCookieJar,
+  readDeviceSessionsFromRequest,
+  writeDeviceSessionsToResponse,
+} from '@/lib/device-sessions.server';
+import {
   WELCOME_COOKIE_NAME,
   WELCOME_MAX_AGE_SECONDS,
 } from '@/lib/tokens';
@@ -16,14 +21,49 @@ const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '0.0.0.0', '::1', '[::1]'
 
 /** Resolve the viewer once per request, even if several components ask. */
 export const getViewer = cache(async (): Promise<Viewer | null> => {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  const device = await readDeviceSessions();
 
-  if (!token) {
-    return null;
+  if (device) {
+    const activeToken = activeSessionToken(device);
+
+    if (activeToken) {
+      const viewer = await getViewerByToken(activeToken);
+
+      if (viewer) {
+        return viewer;
+      }
+    }
+
+    // A revoked active session should not sign out every other group. Try the
+    // rest of the device's groups, newest cookie order first.
+    for (const token of Object.values(device.sessions)) {
+      if (token === activeToken) {
+        continue;
+      }
+
+      const viewer = await getViewerByToken(token);
+
+      if (viewer) {
+        return viewer;
+      }
+    }
   }
 
-  return getViewerByToken(token);
+  // Requests that arrive with the old single cookie before it is migrated.
+  const legacyToken = await readLegacySessionTokenFromCookieJar();
+  return legacyToken ? getViewerByToken(legacyToken) : null;
+});
+
+/** The token for the active group, for the one-time personal-link screen. */
+export const getActiveSessionToken = cache(async (): Promise<string | null> => {
+  const device = await readDeviceSessions();
+  const token = activeSessionToken(device);
+
+  if (token) {
+    return token;
+  }
+
+  return readLegacySessionTokenFromCookieJar();
 });
 
 export async function requireViewer(): Promise<Viewer> {
@@ -142,20 +182,20 @@ export function isSecureRequest(request: Request): boolean {
   }
 }
 
-export function setSessionCookie(
+/**
+ * Add this group's session to the device cookie and make it the active group.
+ * Other groups on the device keep their sessions.
+ */
+export function addGroupSessionCookie(
   response: NextResponse,
+  request: Request,
+  familyId: string,
   token: string,
   secure: boolean = process.env.NODE_ENV === 'production',
 ): void {
-  response.cookies.set({
-    name: SESSION_COOKIE_NAME,
-    value: token,
-    httpOnly: true,
-    secure,
-    sameSite: 'lax',
-    path: '/',
-    maxAge: SESSION_MAX_AGE_SECONDS,
-  });
+  const current = readDeviceSessionsFromRequest(request);
+  const next = addDeviceSession(current, familyId, token);
+  writeDeviceSessionsToResponse(response, next, secure);
 }
 
 /** Mark the next dashboard visit as a first visit. */

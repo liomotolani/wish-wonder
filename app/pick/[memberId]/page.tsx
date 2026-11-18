@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { getViewer, requireViewer } from '@/lib/session';
 import {
   getOrCreatePickerVisit,
@@ -9,6 +9,7 @@ import {
 } from '@/lib/db/picker';
 import { Bauble } from '@/app/_components/Bauble';
 import { MysteryTile } from '@/app/_components/MysteryTile';
+import { PickerAutoRefresh } from '@/app/_components/PickerAutoRefresh';
 import { NoActiveEventNotice } from '@/app/_components/NoActiveEventNotice';
 import { Snowfall } from '@/app/_components/motion';
 import {
@@ -55,7 +56,7 @@ export default async function PickerPage({ params, searchParams }: PickerPagePro
           <div className="mx-auto flex min-h-screen w-full max-w-xl flex-col px-5 py-6 sm:px-8 sm:py-10">
             <Link
               href="/family"
-              aria-label="Back to family"
+              aria-label="Back to Home"
               className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-snow/10 text-snow transition-colors hover:bg-snow/15 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
             >
               <ChevronLeftIcon className="h-6 w-6" />
@@ -87,13 +88,13 @@ export default async function PickerPage({ params, searchParams }: PickerPagePro
         </span>
         <h1 className="mt-6 text-3xl font-extrabold tracking-tight">That&apos;s your own list</h1>
         <p className="mt-2 max-w-sm text-sm leading-relaxed text-snow/65">
-          The mystery is for you too. Pick someone else from the family page.
+          The mystery is for you too. Pick someone else from the Home page.
         </p>
         <Link
           href="/family"
           className="mt-7 inline-flex min-h-12 items-center justify-center rounded-full bg-cranberry px-6 text-sm font-bold text-white hover:bg-cranberry-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
         >
-          Back to family
+          Back to Home
         </Link>
       </div>
     );
@@ -110,18 +111,29 @@ export default async function PickerPage({ params, searchParams }: PickerPagePro
     notFound();
   }
 
+  // Keep the visit in the URL so a refresh (or the live update below) reuses
+  // the same shuffled numbers and peeks.
+  if (visitParam !== visit.id) {
+    redirect(`/pick/${recipient.id}?visit=${visit.id}`);
+  }
+
   const grid = await getPickerGridView(visit, viewer.event.id);
   const allTaken = grid.totalCount > 0 && grid.availableCount === 0;
 
   return (
     <div className="theme-dark min-h-screen bg-pine-900 text-snow">
+      <PickerAutoRefresh
+        memberId={recipient.id}
+        initialTotal={grid.totalCount}
+        initialAvailable={grid.availableCount}
+      />
       <div className="snow-dots relative isolate min-h-screen">
         <Snowfall />
         <div className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col px-5 pb-8 pt-6 sm:px-8 lg:px-6 lg:pt-8">
           <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3 lg:hidden">
             <Link
               href="/family"
-              aria-label="Back to family"
+              aria-label="Back to Home"
               className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-snow/10 text-snow transition-colors hover:bg-snow/15 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
             >
               <ChevronLeftIcon className="h-6 w-6" />
@@ -140,7 +152,7 @@ export default async function PickerPage({ params, searchParams }: PickerPagePro
                 className="hidden min-h-11 items-center gap-1 text-sm font-bold text-snow/65 hover:text-snow focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold lg:inline-flex"
               >
                 <ChevronLeftIcon className="h-4 w-4" />
-                Back to family
+                Back to Home
               </Link>
 
               <span className="mt-5 hidden min-h-12 w-fit items-center gap-2 rounded-full bg-snow/10 py-1 pl-1 pr-5 lg:flex">
@@ -171,12 +183,6 @@ export default async function PickerPage({ params, searchParams }: PickerPagePro
                   <span className="h-3.5 w-3.5 rounded-[4px] border border-dashed border-snow/30" />
                   Taken
                 </span>
-              </div>
-
-              <div className="mt-6 hidden items-start gap-2 rounded-2xl border border-snow/10 bg-snow/[0.06] px-4 py-3 text-xs leading-relaxed text-snow/60 lg:flex">
-                <LockIcon className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
-                {recipient.displayName} can&apos;t see this page. Nobody can see what&apos;s Taken
-                or who took it.
               </div>
             </div>
 
@@ -227,12 +233,6 @@ export default async function PickerPage({ params, searchParams }: PickerPagePro
                       </li>
                     ))}
                   </ul>
-
-                  <div className="mt-6 flex items-start gap-2 rounded-2xl border border-snow/10 bg-snow/[0.06] px-4 py-3 text-xs leading-relaxed text-snow/60 lg:hidden">
-                    <LockIcon className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
-                    {recipient.displayName} can&apos;t see this page. Taken numbers were claimed
-                    by someone, and nobody can see what or who.
-                  </div>
 
                   {allTaken ? (
                     <Link

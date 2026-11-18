@@ -28,7 +28,7 @@ export default function PickerError({ reset }: ErrorPageProps) {
         href="/family"
         className="mt-3 inline-flex min-h-11 items-center text-sm font-bold text-snow/60 hover:text-snow focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
       >
-        Back to family
+        Back to Home
       </Link>
     </main>
   );

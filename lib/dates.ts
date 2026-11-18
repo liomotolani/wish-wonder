@@ -1,14 +1,16 @@
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-interface LondonDateParts {
+export const DEFAULT_TIME_ZONE = 'Europe/London';
+
+interface DateParts {
   year: number;
   month: number;
   day: number;
 }
 
-function londonDateParts(now: Date): LondonDateParts {
+function dateParts(now: Date, timeZone: string): DateParts {
   const parts = new Intl.DateTimeFormat('en-GB', {
-    timeZone: 'Europe/London',
+    timeZone,
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -22,19 +24,30 @@ function londonDateParts(now: Date): LondonDateParts {
   return { year: value('year'), month: value('month'), day: value('day') };
 }
 
-/** Today's date in London as `YYYY-MM-DD`, for once-a-day checks on the client. */
-export function londonDateKey(now: Date = new Date()): string {
-  const { year, month, day } = londonDateParts(now);
+/** Today's date in a timezone as `YYYY-MM-DD`, for once-a-day checks. */
+export function dateKeyInTimeZone(
+  now: Date = new Date(),
+  timeZone: string = DEFAULT_TIME_ZONE,
+): string {
+  const { year, month, day } = dateParts(now, timeZone);
   return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
+/** Kept for the existing London defaults; prefer dateKeyInTimeZone. */
+export function londonDateKey(now: Date = new Date()): string {
+  return dateKeyInTimeZone(now, DEFAULT_TIME_ZONE);
+}
+
 /**
- * Milliseconds until the next midnight in London, so the countdown flips at
- * the same moment the calendar day changes for the family.
+ * Milliseconds until the next midnight in a timezone, so the countdown flips
+ * when that device's calendar day turns over.
  */
-export function msUntilNextLondonMidnight(now: Date = new Date()): number {
+export function msUntilNextMidnight(
+  now: Date = new Date(),
+  timeZone: string = DEFAULT_TIME_ZONE,
+): number {
   const parts = new Intl.DateTimeFormat('en-GB', {
-    timeZone: 'Europe/London',
+    timeZone,
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -49,7 +62,7 @@ export function msUntilNextLondonMidnight(now: Date = new Date()): number {
     return part ? Number(part.value) : 0;
   };
 
-  // London's wall clock read as if it were UTC, then shifted back to a real
+  // The local wall clock read as if it were UTC, then shifted back to a real
   // instant. This keeps daylight saving hours out of the arithmetic.
   const wallClockAsUtc = Date.UTC(
     value('year'),
@@ -65,12 +78,20 @@ export function msUntilNextLondonMidnight(now: Date = new Date()): number {
   return Math.max(0, nextMidnightAsUtc - offset - now.getTime());
 }
 
+/** Kept for existing callers; pass a timezone to msUntilNextMidnight instead. */
+export function msUntilNextLondonMidnight(now: Date = new Date()): number {
+  return msUntilNextMidnight(now, DEFAULT_TIME_ZONE);
+}
+
 /**
- * Whole days from today until Christmas Day in London. Returns 0 on the day,
- * then counts down to next year's Christmas from Boxing Day onwards.
+ * Whole days from today until Christmas Day in the given timezone. Returns 0
+ * on the day, then counts down to next year's Christmas from Boxing Day.
  */
-export function daysUntilChristmas(now: Date = new Date()): number {
-  const today = londonDateParts(now);
+export function daysUntilChristmas(
+  now: Date = new Date(),
+  timeZone: string = DEFAULT_TIME_ZONE,
+): number {
+  const today = dateParts(now, timeZone);
   const todayUtc = Date.UTC(today.year, today.month - 1, today.day);
   let christmasUtc = Date.UTC(today.year, 11, 25);
 
@@ -82,8 +103,11 @@ export function daysUntilChristmas(now: Date = new Date()): number {
 }
 
 /** The Christmas year the current app year is preparing for. */
-export function christmasYear(now: Date = new Date()): number {
-  const today = londonDateParts(now);
+export function christmasYear(
+  now: Date = new Date(),
+  timeZone: string = DEFAULT_TIME_ZONE,
+): number {
+  const today = dateParts(now, timeZone);
   const todayUtc = Date.UTC(today.year, today.month - 1, today.day);
   const christmasUtc = Date.UTC(today.year, 11, 25);
 

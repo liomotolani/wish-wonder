@@ -6,14 +6,12 @@ import { AlertCircleIcon } from '@/app/_components/icons';
 
 interface JoinFamilyFormProps {
   inviteCode: string;
-  familyName: string;
-  requiresApproval: boolean;
+  groupWord: string;
 }
 
 export function JoinFamilyForm({
   inviteCode,
-  familyName,
-  requiresApproval,
+  groupWord,
 }: JoinFamilyFormProps) {
   const router = useRouter();
   const [memberName, setMemberName] = useState('');
@@ -39,7 +37,7 @@ export function JoinFamilyForm({
       };
 
       if (!response.ok || !data.personalLink) {
-        setError(data.error ?? 'We could not join you to the family just now.');
+        setError(data.error ?? 'We could not join you to the group just now.');
         return;
       }
 
@@ -56,7 +54,7 @@ export function JoinFamilyForm({
     <form onSubmit={handleSubmit} className="flex flex-col">
       <div>
         <label htmlFor="join-name" className="mb-2 block text-sm font-bold text-snow/85">
-          What does the family call you?
+          What should we call you?
         </label>
         <input
           id="join-name"
@@ -71,7 +69,7 @@ export function JoinFamilyForm({
           className="w-full rounded-2xl border border-snow/25 bg-snow/10 px-5 py-3.5 text-base text-snow placeholder:text-snow/60 focus:border-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
         />
         <p className="mt-2 text-sm leading-relaxed text-snow/60">
-          This must be different from everyone else&apos;s name in the family.
+          This must be different from everyone else&apos;s name in your {groupWord}.
         </p>
       </div>
 
@@ -85,21 +83,13 @@ export function JoinFamilyForm({
         </p>
       ) : null}
 
-      {requiresApproval ? (
-        <p className="mt-5 rounded-2xl bg-snow/10 px-4 py-3 text-sm leading-relaxed text-snow/70">
-          {familyName} checks new members. You&apos;ll see your lists as soon as the organiser
-          lets you in.
-        </p>
-      ) : null}
-
       <button
         type="submit"
         disabled={submitting}
         className="mt-8 w-full rounded-full bg-cranberry px-6 py-4 text-base font-bold text-white transition-colors hover:bg-cranberry-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold disabled:cursor-wait disabled:opacity-70"
       >
-        {submitting ? 'Joining the family…' : 'Join family'}
+        {submitting ? 'Joining…' : `Join ${groupWord}`}
       </button>
-      <p className="mt-4 text-center text-sm text-snow/60">No account or password needed.</p>
     </form>
   );
 }

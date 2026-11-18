@@ -1,19 +1,21 @@
 import 'server-only';
 import { createAdminClient } from '@/lib/db/client';
 import { PRIORITY_REALLY_WANT, type giftInputSchema } from '@/lib/validation';
+import { DEFAULT_CURRENCY, isCurrencyCode } from '@/lib/currencies';
 import type { OwnGiftView } from '@/lib/types';
 import type { z } from 'zod';
 
 export type GiftInput = z.infer<typeof giftInputSchema>;
 
 const OWN_GIFT_COLUMNS =
-  'id, name, description, image_url, price_pence, shop_url, preferences, priority, updated_at';
+  'id, name, description, image_url, currency, price_pence, shop_url, preferences, priority, updated_at';
 
 interface OwnGiftRow {
   id: string;
   name: string;
   description: string | null;
   image_url: string | null;
+  currency: string;
   price_pence: number | null;
   shop_url: string | null;
   preferences: string | null;
@@ -27,6 +29,7 @@ function toOwnGift(row: OwnGiftRow): OwnGiftView {
     name: row.name,
     description: row.description,
     imageUrl: row.image_url,
+    currency: isCurrencyCode(row.currency) ? row.currency : DEFAULT_CURRENCY,
     pricePence: row.price_pence,
     shopUrl: row.shop_url,
     preferences: row.preferences,
@@ -58,6 +61,26 @@ export async function listOwnGifts(
   return (data ?? []).map((row) => toOwnGift(row as OwnGiftRow));
 }
 
+/** Just the names, for the dashboard summary. Avoids loading full gift rows. */
+export async function listOwnGiftNames(
+  ownerMemberId: string,
+  eventId: string,
+): Promise<string[]> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from('gifts')
+    .select('name')
+    .eq('owner_member_id', ownerMemberId)
+    .eq('event_id', eventId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    throw error;
+  }
+
+  return (data ?? []).map((row) => row.name);
+}
+
 export async function getOwnGift(
   giftId: string,
   ownerMemberId: string,
@@ -84,6 +107,7 @@ function giftWriteValues(input: GiftInput) {
     name: input.name,
     description: input.description,
     image_url: input.imageUrl,
+    currency: input.currency,
     price_pence: input.pricePence,
     shop_url: input.shopUrl,
     preferences: input.preferences,

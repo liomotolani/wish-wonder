@@ -1,26 +1,39 @@
-const GBP_FORMATTER = new Intl.NumberFormat('en-GB', {
-  style: 'currency',
-  currency: 'GBP',
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 2,
-});
+import { DEFAULT_CURRENCY, isCurrencyCode, type CurrencyCode } from '@/lib/currencies';
 
-const GBP_FORMATTER_WITH_PENCE = new Intl.NumberFormat('en-GB', {
-  style: 'currency',
-  currency: 'GBP',
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
+const FORMATTERS = new Map<string, Intl.NumberFormat>();
 
-/** Format integer pence as GBP. Whole pounds show as £95; part pounds as £95.50. */
-export function formatPrice(pence: number | null): string | null {
-  if (pence === null) {
+function formatterFor(currency: CurrencyCode, withPence: boolean): Intl.NumberFormat {
+  const key = `${currency}:${withPence ? 2 : 0}`;
+  const cached = FORMATTERS.get(key);
+
+  if (cached) {
+    return cached;
+  }
+
+  const formatter = new Intl.NumberFormat('en-GB', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: withPence ? 2 : 0,
+    maximumFractionDigits: 2,
+  });
+
+  FORMATTERS.set(key, formatter);
+  return formatter;
+}
+
+/** Format integer minor units in the gift's currency. */
+export function formatPrice(
+  minorUnits: number | null,
+  currency: string = DEFAULT_CURRENCY,
+): string | null {
+  if (minorUnits === null) {
     return null;
   }
 
-  return pence % 100 === 0
-    ? GBP_FORMATTER.format(pence / 100)
-    : GBP_FORMATTER_WITH_PENCE.format(pence / 100);
+  const code = isCurrencyCode(currency) ? currency : DEFAULT_CURRENCY;
+  const hasPence = minorUnits % 100 !== 0;
+
+  return formatterFor(code, hasPence).format(minorUnits / 100);
 }
 
 /** Format an ISO date as a British date, for example 25 December 2026. */

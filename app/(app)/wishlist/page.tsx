@@ -7,6 +7,7 @@ import { PageHeaderBand } from '@/app/_components/PageHeaderBand';
 import { WishlistTabs } from '@/app/_components/WishlistTabs';
 import { WishlistGiftGrid } from '@/app/_components/WishlistGiftGrid';
 import { NoActiveEventNotice } from '@/app/_components/NoActiveEventNotice';
+import { groupWording } from '@/lib/groupWording';
 import { PlusIcon } from '@/app/_components/icons';
 
 export const metadata: Metadata = {
@@ -26,6 +27,7 @@ export default async function WishlistPage() {
   const countLabel = gifts.length === 1 ? '1 wish' : `${gifts.length} wishes`;
   const eventName = viewer.event?.name ?? 'This Christmas';
   const isOrganiser = viewer.family.organiserMemberId === viewer.member.id;
+  const wording = groupWording(viewer.family.groupType);
 
   if (!viewer.event) {
     return (
@@ -73,8 +75,8 @@ export default async function WishlistPage() {
               Your list is empty
             </h2>
             <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted">
-              Add the gifts you&apos;d love so your family can surprise you with something you
-              really want.
+              Add the gifts you&apos;d love so your {wording.groupWord} can surprise you with
+              something you really want.
             </p>
             <Link href="/wishlist/new" className={`${ADD_BUTTON_CLASS} mt-6`}>
               <PlusIcon className="h-5 w-5" />
