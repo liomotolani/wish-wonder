@@ -26,6 +26,17 @@ export async function POST(request: Request): Promise<NextResponse> {
     return apiError('There is no active Christmas list to pick from yet.', 409);
   }
 
+  if (!auth.viewer.family.mysteryBoxes) {
+    return noStoreJson(
+      {
+        ok: false,
+        reason: 'mystery_boxes_off',
+        error: 'Mystery boxes are turned off for this group.',
+      },
+      { status: 403 },
+    );
+  }
+
   const body = await readJsonBody(request);
   const parsed = revealSchema.safeParse(body);
 

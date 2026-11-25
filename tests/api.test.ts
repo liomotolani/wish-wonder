@@ -7,7 +7,7 @@ import { POST as giftPhotoRoute } from '@/app/api/gift-photos/route';
 import { POST as reissueLinkRoute } from '@/app/api/organiser/members/[id]/reissue-link/route';
 import { GET as useDeviceLinkRoute } from '@/app/device/[token]/route';
 import { createAdminClient } from '@/lib/db/client';
-import { parseDeviceSessions } from '@/lib/device-sessions';
+import { parseDeviceSessions, encodeDeviceSessions } from '@/lib/device-sessions';
 import {
   getOrCreatePickerVisit,
   getReveal,
@@ -96,6 +96,61 @@ describe('HTTP endpoints', () => {
     const nextDeviceCookie = secondCookie.match(/ww_groups=([^;]+)/)?.[1];
     const sessions = parseDeviceSessions(nextDeviceCookie);
     expect(Object.keys(sessions?.sessions ?? {})).toHaveLength(2);
+  });
+
+  it('still shows the invite link screen when the device cookie holds no valid group', async () => {
+    const familyName = `Stale Cookie ${crypto.randomUUID().slice(0, 8)}`;
+    createdFamilyNames.push(familyName);
+    const fakeFamilyId = crypto.randomUUID();
+    const staleCookie = encodeDeviceSessions({
+      active: fakeFamilyId,
+      sessions: { [fakeFamilyId]: 'a'.repeat(43) },
+    });
+
+    const response = await createFamilyRoute(
+      new Request('http://localhost/api/families', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          cookie: `ww_groups=${staleCookie}`,
+        },
+        body: JSON.stringify({
+          familyName,
+          memberName: 'Mum',
+          requiresApproval: false,
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(201);
+    const data = (await response.json()) as { next: string };
+    expect(data.next).toBe('/group-link?created=1');
+  });
+
+  it('can create a list-only group from the picker choice', async () => {
+    const familyName = `List Only ${crypto.randomUUID().slice(0, 8)}`;
+    createdFamilyNames.push(familyName);
+
+    const response = await createFamilyRoute(
+      new Request('http://localhost/api/families', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          familyName,
+          memberName: 'Mum',
+          requiresApproval: false,
+          mysteryBoxes: false,
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(201);
+    const { data } = await createAdminClient()
+      .from('families')
+      .select('mystery_boxes')
+      .eq('name', familyName)
+      .single();
+    expect(data?.mystery_boxes).toBe(false);
   });
 
   it('creates a family, sets an httpOnly cookie and returns only safe member data', async () => {

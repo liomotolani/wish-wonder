@@ -7,9 +7,11 @@ import {
   revalidateViews,
 } from '@/lib/api';
 import {
+  claimFromGiftId,
   claimFromVisit,
   getPickerVisitForBuyer,
 } from '@/lib/db/picker';
+import type { ClaimResult } from '@/lib/types';
 import {
   claimSchema,
   formatValidationError,
@@ -34,25 +36,39 @@ export async function POST(request: Request): Promise<NextResponse> {
   }
 
   try {
-    const visit = await getPickerVisitForBuyer(
-      parsed.data.visitId,
-      auth.viewer.member.id,
-    );
+    let result: ClaimResult;
 
-    if (!visit) {
-      return apiError('That picker has expired. Start again from the Home page.', 404);
+    if ('giftId' in parsed.data) {
+      result = await claimFromGiftId(
+        auth.viewer,
+        parsed.data.giftId,
+        auth.viewer.event.id,
+      );
+    } else {
+      if (!auth.viewer.family.mysteryBoxes) {
+        return apiError('Mystery boxes are turned off for this group.', 403);
+      }
+
+      const visit = await getPickerVisitForBuyer(
+        parsed.data.visitId,
+        auth.viewer.member.id,
+      );
+
+      if (!visit) {
+        return apiError('That picker has expired. Start again from the Home page.', 404);
+      }
+
+      if (visit.recipientMemberId === auth.viewer.member.id) {
+        return apiError('You cannot pick from your own list.', 403);
+      }
+
+      result = await claimFromVisit(
+        auth.viewer,
+        visit,
+        auth.viewer.event.id,
+        parsed.data.number,
+      );
     }
-
-    if (visit.recipientMemberId === auth.viewer.member.id) {
-      return apiError('You cannot pick from your own list.', 403);
-    }
-
-    const result = await claimFromVisit(
-      auth.viewer,
-      visit,
-      auth.viewer.event.id,
-      parsed.data.number,
-    );
 
     if (result.ok) {
       revalidateViews('/secret-gifts', '/family');

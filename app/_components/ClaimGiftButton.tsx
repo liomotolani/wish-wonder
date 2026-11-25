@@ -10,9 +10,11 @@ import { markBoxTaken } from '@/app/_components/reveal-cache';
 
 interface ClaimGiftButtonProps {
   recipientName: string;
-  visitId: string;
-  number: number;
   backHref: string;
+  visitId?: string;
+  number?: number;
+  giftId?: string;
+  backLabel?: string;
 }
 
 type ClaimState = 'idle' | 'submitting' | 'success' | 'already' | 'error';
@@ -21,7 +23,9 @@ export function ClaimGiftButton({
   recipientName,
   visitId,
   number,
+  giftId,
   backHref,
+  backLabel = 'Try Another Number',
 }: ClaimGiftButtonProps) {
   const [state, setState] = useState<ClaimState>('idle');
   const [error, setError] = useState<string | null>(null);
@@ -67,7 +71,7 @@ export function ClaimGiftButton({
       const response = await fetch('/api/claims', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ visitId, number }),
+        body: JSON.stringify(giftId ? { giftId } : { visitId, number }),
       });
       const data = (await response.json()) as {
         ok?: boolean;
@@ -76,7 +80,9 @@ export function ClaimGiftButton({
       };
 
       if (response.ok && data.ok) {
-        markBoxTaken(visitId, number);
+        if (visitId && typeof number === 'number') {
+          markBoxTaken(visitId, number);
+        }
         setState('success');
         return;
       }
@@ -142,14 +148,14 @@ export function ClaimGiftButton({
         </span>
         <h2 className="mt-4 text-2xl font-extrabold tracking-tight">Already picked</h2>
         <p className="mt-2 text-sm leading-relaxed text-muted">
-          Someone claimed this gift while you were looking. Don&apos;t worry, there are more
-          numbers to try.
+          Someone claimed this gift while you were looking. Don&apos;t worry, there are more{' '}
+          {giftId ? 'gifts' : 'numbers'} to try.
         </p>
         <Link
           href={backHref}
           className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-cranberry px-5 text-sm font-bold text-white hover:bg-cranberry-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pine-900"
         >
-          Try Another Number
+          {backLabel}
         </Link>
       </div>
     );
@@ -170,7 +176,7 @@ export function ClaimGiftButton({
           href={backHref}
           className="flex w-full items-center justify-center rounded-full bg-snow px-6 py-4 text-base font-bold text-ink transition-colors hover:bg-pine-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pine-900"
         >
-          Try Another Number
+          {backLabel}
         </Link>
       </div>
 

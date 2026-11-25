@@ -10,6 +10,7 @@ export interface Family {
   name: string;
   group_type: GroupType;
   invite_code: string;
+  mystery_boxes: boolean;
   organiser_member_id: string | null;
   requires_approval: boolean;
   created_at: string;
@@ -110,6 +111,7 @@ export interface Viewer {
     name: string;
     groupType: GroupType;
     inviteCode: string;
+    mysteryBoxes: boolean;
     organiserMemberId: string | null;
     requiresApproval: boolean;
   };
@@ -124,10 +126,30 @@ export type MysteryBoxState = 'mystery' | 'peeked' | 'taken';
 export interface MysteryBoxView {
   number: number;
   state: MysteryBoxState;
+  pricePence: number | null;
+  currency: CurrencyCode;
 }
 
 export interface PickerGridView {
   boxes: MysteryBoxView[];
+  totalCount: number;
+  availableCount: number;
+}
+
+export interface PickerListItemView {
+  id: string;
+  name: string;
+  imageUrl: string | null;
+  pricePence: number | null;
+  currency: CurrencyCode;
+  shopName: string | null;
+  shopUrl: string | null;
+  priority: boolean;
+  taken: boolean;
+}
+
+export interface PickerListView {
+  items: PickerListItemView[];
   totalCount: number;
   availableCount: number;
 }

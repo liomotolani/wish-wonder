@@ -18,6 +18,7 @@ export const createFamilySchema = z.object({
   groupType: groupTypeSchema.default('family'),
   memberName: nameSchema('your name', 40),
   requiresApproval: z.boolean(),
+  mysteryBoxes: z.boolean().default(true),
 });
 
 export const joinFamilySchema = z.object({
@@ -38,12 +39,14 @@ export const familySettingsSchema = z
       .optional(),
     groupType: groupTypeSchema.optional(),
     requiresApproval: z.boolean().optional(),
+    mysteryBoxes: z.boolean().optional(),
   })
   .refine(
     (value) =>
       value.name !== undefined ||
       value.groupType !== undefined ||
-      value.requiresApproval !== undefined,
+      value.requiresApproval !== undefined ||
+      value.mysteryBoxes !== undefined,
     'There is nothing to save.',
   );
 
@@ -91,10 +94,15 @@ export const revealSchema = z.object({
   number: z.number().int().min(1).max(500),
 });
 
-export const claimSchema = z.object({
-  visitId: z.uuid('That picker visit is not valid.'),
-  number: z.number().int().min(1).max(500),
-});
+export const claimSchema = z.union([
+  z.object({
+    visitId: z.uuid('That picker visit is not valid.'),
+    number: z.number().int().min(1).max(500),
+  }),
+  z.object({
+    giftId: z.uuid('That gift is not valid.'),
+  }),
+]);
 
 export const claimUpdateSchema = z.object({
   action: z.enum(['purchase', 'release']),

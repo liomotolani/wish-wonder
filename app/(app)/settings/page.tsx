@@ -12,6 +12,7 @@ import { EventActions } from '@/app/_components/EventActions';
 import { RemoveMemberButton } from '@/app/_components/RemoveMemberButton';
 import { ReissueLinkButton } from '@/app/_components/ReissueLinkButton';
 import { RenameFamilyForm } from '@/app/_components/RenameFamilyForm';
+import { MysteryBoxesToggle } from '@/app/_components/MysteryBoxesToggle';
 import { LockIcon, ChevronLeftIcon } from '@/app/_components/icons';
 import { capitaliseGroupWord, groupWording } from '@/lib/groupWording';
 
@@ -79,6 +80,9 @@ export default async function SettingsPage() {
                 className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-2xl bg-gold px-4 text-sm font-bold text-pine-900 transition-colors hover:bg-gold/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pine-900"
               />
             </div>
+          </div>
+          <div className="mt-5 border-t border-pine-100 pt-5">
+            <MysteryBoxesToggle initialEnabled={viewer.family.mysteryBoxes} />
           </div>
         </section>
 

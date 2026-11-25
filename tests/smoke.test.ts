@@ -10,6 +10,7 @@ describe('Domain types smoke test', () => {
       id: '123e4567-e89b-12d3-a456-426614174000',
       name: 'The Williams Family',
       group_type: 'family',
+      mystery_boxes: true,
       invite_code: 'WILLIAMS2026',
       organiser_member_id: null,
       requires_approval: true,

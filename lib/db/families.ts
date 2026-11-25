@@ -6,6 +6,7 @@ import type { FamilyInvitePreview, MemberStatus } from '@/lib/types';
 export interface CreateFamilyRecordInput {
   familyName: string;
   groupType?: GroupType;
+  mysteryBoxes?: boolean;
   memberName: string;
   requiresApproval: boolean;
   inviteCode: string;
@@ -40,6 +41,7 @@ export async function createFamilyRecord(
   const { data, error } = await supabase.rpc('create_family', {
     p_family_name: input.familyName,
     p_group_type: input.groupType ?? 'family',
+    p_mystery_boxes: input.mysteryBoxes ?? true,
     p_member_name: input.memberName,
     p_requires_approval: input.requiresApproval,
     p_invite_code: input.inviteCode,

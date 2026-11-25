@@ -7,6 +7,7 @@ import {
 } from '@/lib/api';
 import { createFamilyRecord } from '@/lib/db/families';
 import { readDeviceSessionsFromRequest } from '@/lib/device-sessions.server';
+import { getViewerByToken } from '@/lib/auth';
 import { christmasYear } from '@/lib/dates';
 import {
   addGroupSessionCookie,
@@ -37,9 +38,18 @@ export async function POST(request: Request): Promise<NextResponse> {
   const token = createPersonalToken();
   const eventName = `Christmas ${christmasYear()}`;
   const existingDevice = readDeviceSessionsFromRequest(request);
-  const alreadyHasGroups = Boolean(
-    existingDevice && Object.keys(existingDevice.sessions).length > 0,
-  );
+  let alreadyHasGroups = false;
+
+  if (existingDevice) {
+    for (const existingToken of Object.values(existingDevice.sessions)) {
+      const existingViewer = await getViewerByToken(existingToken);
+
+      if (existingViewer) {
+        alreadyHasGroups = true;
+        break;
+      }
+    }
+  }
 
   for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
@@ -47,6 +57,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       const created = await createFamilyRecord({
         familyName: parsed.data.familyName,
         groupType: parsed.data.groupType,
+        mysteryBoxes: parsed.data.mysteryBoxes,
         memberName: parsed.data.memberName,
         requiresApproval: parsed.data.requiresApproval,
         inviteCode,

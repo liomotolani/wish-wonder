@@ -51,6 +51,7 @@ export async function updateFamilySettings(input: {
   name?: string;
   groupType?: GroupType;
   requiresApproval?: boolean;
+  mysteryBoxes?: boolean;
 }): Promise<'ok' | 'not_allowed'> {
   const supabase = createAdminClient();
   const { data: family, error: familyError } = await supabase
@@ -67,7 +68,12 @@ export async function updateFamilySettings(input: {
     return 'not_allowed';
   }
 
-  const update: { name?: string; group_type?: GroupType; requires_approval?: boolean } = {};
+  const update: {
+    name?: string;
+    group_type?: GroupType;
+    requires_approval?: boolean;
+    mystery_boxes?: boolean;
+  } = {};
 
   if (input.name !== undefined) {
     update.name = input.name;
@@ -79,6 +85,10 @@ export async function updateFamilySettings(input: {
 
   if (input.requiresApproval !== undefined) {
     update.requires_approval = input.requiresApproval;
+  }
+
+  if (input.mysteryBoxes !== undefined) {
+    update.mystery_boxes = input.mysteryBoxes;
   }
 
   if (Object.keys(update).length === 0) {

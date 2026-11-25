@@ -20,6 +20,7 @@ export async function GET(request: Request): Promise<NextResponse> {
       groupType: auth.viewer.family.groupType,
       organiserMemberId: auth.viewer.family.organiserMemberId,
       requiresApproval: auth.viewer.family.requiresApproval,
+      mysteryBoxes: auth.viewer.family.mysteryBoxes,
     },
     event: auth.viewer.event,
   });

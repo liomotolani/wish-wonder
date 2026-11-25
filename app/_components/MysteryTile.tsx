@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion, useAnimationControls, useReducedMotion } from 'motion/react';
 import type { MysteryBoxState } from '@/lib/types';
+import type { CurrencyCode } from '@/lib/currencies';
+import { formatPrice } from '@/lib/format';
 import { mysteryToneFor } from '@/lib/mystery-tone';
 import { EyeIcon, CheckIcon } from '@/app/_components/icons';
 import {
@@ -25,8 +27,24 @@ import {
 interface MysteryTileProps {
   number: number;
   state: MysteryBoxState;
+  pricePence: number | null;
+  currency: CurrencyCode;
   href?: string;
   visitId?: string;
+}
+
+function PriceTag({
+  pricePence,
+  currency,
+}: {
+  pricePence: number | null;
+  currency: CurrencyCode;
+}) {
+  return (
+    <span className="absolute left-2 top-2 z-20 rounded-full bg-pine-900/85 px-2 py-0.5 text-xs font-bold text-snow">
+      {formatPrice(pricePence, currency) ?? 'No price'}
+    </span>
+  );
 }
 
 const TILE_CLASS =
@@ -68,7 +86,14 @@ function Bow({ className }: { className: string }) {
   );
 }
 
-export function MysteryTile({ number, state, href, visitId }: MysteryTileProps) {
+export function MysteryTile({
+  number,
+  state,
+  pricePence,
+  currency,
+  href,
+  visitId,
+}: MysteryTileProps) {
   const router = useRouter();
   const reduce = useReducedMotion();
   const finePointer = useMediaQuery('(hover: hover) and (pointer: fine)');
@@ -177,7 +202,9 @@ export function MysteryTile({ number, state, href, visitId }: MysteryTileProps) 
           }}
           aria-busy={opening || undefined}
           className={`${TILE_CLASS} flex flex-col justify-center border-2 border-gold/70 bg-pine-900/80 px-3 py-3 text-snow`}
-          aria-label={`Number ${number}, peeked. Open again.`}
+          aria-label={`Number ${number}, peeked, ${
+            formatPrice(pricePence, currency) ?? 'No price'
+          }. Open again.`}
         >
           {opening && !reduce ? (
             <motion.span
@@ -188,6 +215,7 @@ export function MysteryTile({ number, state, href, visitId }: MysteryTileProps) 
               transition={{ duration: DURATION.tileShake, ease: 'easeOut' }}
             />
           ) : null}
+          <PriceTag pricePence={pricePence} currency={currency} />
           <EyeIcon className="absolute right-3 top-3 h-4 w-4 text-gold" />
           <span className="text-3xl font-extrabold leading-none text-gold sm:text-4xl">
             {number}
@@ -220,7 +248,9 @@ export function MysteryTile({ number, state, href, visitId }: MysteryTileProps) 
         }}
         aria-busy={opening || undefined}
         className={`${TILE_CLASS} ${tone.box} ${tone.border}`}
-        aria-label={`Number ${number}, mystery gift. Peek inside.`}
+        aria-label={`Number ${number}, mystery gift, ${
+          formatPrice(pricePence, currency) ?? 'No price'
+        }. Peek inside.`}
       >
         {opening && !reduce ? (
           <motion.span
@@ -231,6 +261,7 @@ export function MysteryTile({ number, state, href, visitId }: MysteryTileProps) 
             transition={{ duration: DURATION.tileShake, ease: 'easeOut' }}
           />
         ) : null}
+        <PriceTag pricePence={pricePence} currency={currency} />
         <span className={`absolute inset-y-0 left-[54%] w-3 ${tone.ribbon}`} aria-hidden="true" />
         <span className={`absolute inset-x-0 top-[36%] h-3 ${tone.ribbon}`} aria-hidden="true" />
         <motion.span

@@ -34,7 +34,7 @@ export async function getViewerByToken(
   const { data: session, error: sessionError } = await supabase
     .from('member_sessions')
     .select(
-      'id, member_id, members!member_sessions_member_id_fkey!inner(id, family_id, display_name, status, managed_by_member_id, families!members_family_id_fkey!inner(id, name, group_type, invite_code, organiser_member_id, requires_approval))',
+      'id, member_id, members!member_sessions_member_id_fkey!inner(id, family_id, display_name, status, managed_by_member_id, families!members_family_id_fkey!inner(id, name, group_type, invite_code, mystery_boxes, organiser_member_id, requires_approval))',
     )
     .eq('token_hash', hashPersonalToken(rawToken))
     .is('revoked_at', null)
@@ -65,6 +65,7 @@ export async function getViewerByToken(
         name: family.name,
         groupType: isGroupType(family.group_type) ? family.group_type : 'family',
         inviteCode: family.invite_code,
+        mysteryBoxes: family.mystery_boxes,
         organiserMemberId: family.organiser_member_id,
         requiresApproval: family.requires_approval,
       },
@@ -98,6 +99,7 @@ export async function getViewerByToken(
       name: family.name,
       groupType: isGroupType(family.group_type) ? family.group_type : 'family',
       inviteCode: family.invite_code,
+      mysteryBoxes: family.mystery_boxes,
       organiserMemberId: family.organiser_member_id,
       requiresApproval: family.requires_approval,
     },

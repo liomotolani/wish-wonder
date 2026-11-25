@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AlertCircleIcon } from '@/app/_components/icons';
 import {
@@ -13,6 +13,7 @@ import {
 interface CreateFamilyFormProps {
   initialRequiresApproval?: boolean;
   defaultMemberName?: string;
+  defaultPickerStyle?: 'boxes' | 'list';
 }
 
 const INPUT_CLASS =
@@ -22,12 +23,38 @@ const LABEL_CLASS = 'mb-2 block text-sm font-bold text-snow/85 lg:text-ink';
 export function CreateFamilyForm({
   initialRequiresApproval = true,
   defaultMemberName = '',
+  defaultPickerStyle,
 }: CreateFamilyFormProps) {
   const router = useRouter();
   const [groupType, setGroupType] = useState<GroupType>('family');
   const [familyName, setFamilyName] = useState('');
   const [memberName, setMemberName] = useState(defaultMemberName);
   const [requiresApproval, setRequiresApproval] = useState(initialRequiresApproval);
+  const [mysteryBoxes, setMysteryBoxes] = useState(
+    defaultPickerStyle !== 'list',
+  );
+
+  useEffect(() => {
+    if (defaultPickerStyle) {
+      return;
+    }
+
+    const frame = window.requestAnimationFrame(() => {
+      try {
+        const stored = window.localStorage.getItem('ww-picker-default');
+
+        if (stored === 'list') {
+          setMysteryBoxes(false);
+        } else if (stored === 'boxes') {
+          setMysteryBoxes(true);
+        }
+      } catch {
+        // Default to mystery boxes.
+      }
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [defaultPickerStyle]);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const wording = groupWording(groupType);
@@ -41,7 +68,13 @@ export function CreateFamilyForm({
       const response = await fetch('/api/families', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ familyName, groupType, memberName, requiresApproval }),
+        body: JSON.stringify({
+          familyName,
+          groupType,
+          memberName,
+          requiresApproval,
+          mysteryBoxes,
+        }),
       });
       const data = (await response.json()) as {
         inviteLink?: string;
@@ -107,6 +140,77 @@ export function CreateFamilyForm({
                 </label>
               );
             })}
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend className={LABEL_CLASS}>How should buyers pick?</legend>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label
+              className={`flex min-h-14 cursor-pointer items-start gap-3 rounded-2xl border px-4 py-3 transition-colors focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-gold ${
+                mysteryBoxes
+                  ? 'border-gold bg-gold/15 text-snow lg:bg-gold-100/70 lg:text-ink'
+                  : 'border-snow/20 bg-snow/[0.04] text-snow/80 hover:bg-snow/10 lg:border-pine-100 lg:bg-white lg:text-ink lg:hover:bg-snow'
+              }`}
+            >
+              <input
+                type="radio"
+                name="pickerStyle"
+                value="boxes"
+                checked={mysteryBoxes}
+                onChange={() => setMysteryBoxes(true)}
+                className="sr-only"
+              />
+              <span
+                aria-hidden="true"
+                className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                  mysteryBoxes ? 'border-cranberry' : 'border-snow/50 lg:border-muted/50'
+                }`}
+              >
+                {mysteryBoxes ? (
+                  <span className="h-2.5 w-2.5 rounded-full bg-cranberry" />
+                ) : null}
+              </span>
+              <span>
+                <span className="block text-sm font-bold">Mystery boxes</span>
+                <span className="mt-0.5 block text-xs leading-relaxed opacity-75">
+                  Prices on every box; gifts stay a surprise.
+                </span>
+              </span>
+            </label>
+
+            <label
+              className={`flex min-h-14 cursor-pointer items-start gap-3 rounded-2xl border px-4 py-3 transition-colors focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-gold ${
+                !mysteryBoxes
+                  ? 'border-gold bg-gold/15 text-snow lg:bg-gold-100/70 lg:text-ink'
+                  : 'border-snow/20 bg-snow/[0.04] text-snow/80 hover:bg-snow/10 lg:border-pine-100 lg:bg-white lg:text-ink lg:hover:bg-snow'
+              }`}
+            >
+              <input
+                type="radio"
+                name="pickerStyle"
+                value="list"
+                checked={!mysteryBoxes}
+                onChange={() => setMysteryBoxes(false)}
+                className="sr-only"
+              />
+              <span
+                aria-hidden="true"
+                className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                  !mysteryBoxes ? 'border-cranberry' : 'border-snow/50 lg:border-muted/50'
+                }`}
+              >
+                {!mysteryBoxes ? (
+                  <span className="h-2.5 w-2.5 rounded-full bg-cranberry" />
+                ) : null}
+              </span>
+              <span>
+                <span className="block text-sm font-bold">List view</span>
+                <span className="mt-0.5 block text-xs leading-relaxed opacity-75">
+                  Show every gift and price straight away.
+                </span>
+              </span>
+            </label>
           </div>
         </fieldset>
 
