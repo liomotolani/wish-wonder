@@ -55,18 +55,22 @@ function RevealTopBar({
   );
 }
 
-function RevealGiftCard({
+export function RevealGiftCard({
   gift,
   number,
+  giftId,
   recipientName,
   visitId,
   backHref,
+  backLabel,
 }: {
   gift: RevealedGiftView;
-  number: number;
+  number?: number;
+  giftId?: string;
   recipientName: string;
-  visitId: string;
+  visitId?: string;
   backHref: string;
+  backLabel?: string;
 }) {
   const price = formatPrice(gift.pricePence, gift.currency);
   const chips = preferenceChips(gift.preferences);
@@ -87,15 +91,19 @@ function RevealGiftCard({
         ) : (
           <GiftPlaceholder />
         )}
-        <span className="absolute left-4 top-4 flex h-16 w-16 items-end justify-center rounded-2xl bg-cranberry p-2 text-2xl font-extrabold text-white shadow-lg">
-          {number}
-        </span>
+        {typeof number === 'number' ? (
+          <span className="absolute left-4 top-4 flex h-16 w-16 items-end justify-center rounded-2xl bg-cranberry p-2 text-2xl font-extrabold text-white shadow-lg">
+            {number}
+          </span>
+        ) : null}
       </div>
 
       <div className="p-5 sm:p-6 lg:flex lg:flex-col lg:p-3">
         <div className="flex items-start justify-between gap-3">
           <p className="hidden text-[11px] font-bold uppercase tracking-[0.16em] text-cranberry-ink lg:block">
-            Mystery gift revealed · For {recipientName}
+            {typeof number === 'number'
+              ? `Mystery gift revealed · For ${recipientName}`
+              : `From ${recipientName}'s list`}
           </p>
           <Link
             href={backHref}
@@ -172,7 +180,9 @@ function RevealGiftCard({
             recipientName={recipientName}
             visitId={visitId}
             number={number}
+            giftId={giftId}
             backHref={backHref}
+            backLabel={backLabel}
           />
         </div>
       </div>

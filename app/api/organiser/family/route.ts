@@ -37,6 +37,7 @@ export async function PATCH(request: Request): Promise<NextResponse> {
       name: parsed.data.name,
       groupType: parsed.data.groupType,
       requiresApproval: parsed.data.requiresApproval,
+      mysteryBoxes: parsed.data.mysteryBoxes,
     });
 
     if (result === 'not_allowed') {

@@ -91,14 +91,14 @@ isOneToOne: false
                   ]
                 },"families": {
                   Row: {
-                    "created_at": string,"group_type": string,"id": string,"invite_code": string,"name": string,"organiser_member_id": string | null,"requires_approval": boolean
+                    "created_at": string,"group_type": string,"id": string,"invite_code": string,"mystery_boxes": boolean,"name": string,"organiser_member_id": string | null,"requires_approval": boolean
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"group_type"?: string,"id"?: string,"invite_code": string,"name": string,"organiser_member_id"?: string | null,"requires_approval"?: boolean
+                    "created_at"?: string,"group_type"?: string,"id"?: string,"invite_code": string,"mystery_boxes"?: boolean,"name": string,"organiser_member_id"?: string | null,"requires_approval"?: boolean
                   }
                   Update: {
-                    "created_at"?: string,"group_type"?: string,"id"?: string,"invite_code"?: string,"name"?: string,"organiser_member_id"?: string | null,"requires_approval"?: boolean
+                    "created_at"?: string,"group_type"?: string,"id"?: string,"invite_code"?: string,"mystery_boxes"?: boolean,"name"?: string,"organiser_member_id"?: string | null,"requires_approval"?: boolean
                   }
                   Relationships: [
                     {
@@ -266,7 +266,7 @@ isOneToOne: false
 { Args: { "p_action": string,"p_key_hash": string,"p_limit": number,"p_window_seconds": number }; Returns: boolean
                            },
 "create_family":
-{ Args: { "p_event_name": string,"p_family_name": string,"p_group_type": string,"p_invite_code": string,"p_member_name": string,"p_requires_approval": boolean,"p_token_hash": string }; Returns: Json
+{ Args: { "p_event_name": string,"p_family_name": string,"p_group_type": string,"p_invite_code": string,"p_member_name": string,"p_mystery_boxes": boolean,"p_requires_approval": boolean,"p_token_hash": string }; Returns: Json
                            },
 "create_next_event":
 { Args: { "p_event_name": string,"p_family_id": string,"p_organiser_member_id": string }; Returns: Json

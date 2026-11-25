@@ -5,22 +5,29 @@ import { getViewer, requireViewer } from '@/lib/session';
 import {
   getOrCreatePickerVisit,
   getPickerGridView,
+  getPickerListView,
   getPickerRecipient,
 } from '@/lib/db/picker';
 import { Bauble } from '@/app/_components/Bauble';
 import { MysteryTile } from '@/app/_components/MysteryTile';
 import { PickerAutoRefresh } from '@/app/_components/PickerAutoRefresh';
+import { PickerViewSwitch } from '@/app/_components/PickerViewSwitch';
+import { ListBuyButton } from '@/app/_components/ListBuyButton';
+import { GiftThumbnail } from '@/app/_components/GiftThumbnail';
 import { NoActiveEventNotice } from '@/app/_components/NoActiveEventNotice';
 import { Snowfall } from '@/app/_components/motion';
+import { formatPrice } from '@/lib/format';
 import {
   ChevronLeftIcon,
+  CheckIcon,
   EyeIcon,
   LockIcon,
+  StarIcon,
 } from '@/app/_components/icons';
 
 interface PickerPageProps {
   params: Promise<{ memberId: string }>;
-  searchParams: Promise<{ visit?: string | string[] }>;
+  searchParams: Promise<{ visit?: string | string[]; view?: string | string[] }>;
 }
 
 export async function generateMetadata({
@@ -48,6 +55,7 @@ export default async function PickerPage({ params, searchParams }: PickerPagePro
   const { memberId } = await params;
   const search = await searchParams;
   const visitParam = typeof search.visit === 'string' ? search.visit : undefined;
+  const viewParam = typeof search.view === 'string' ? search.view : undefined;
 
   if (!viewer.event) {
     return (
@@ -88,7 +96,7 @@ export default async function PickerPage({ params, searchParams }: PickerPagePro
         </span>
         <h1 className="mt-6 text-3xl font-extrabold tracking-tight">That&apos;s your own list</h1>
         <p className="mt-2 max-w-sm text-sm leading-relaxed text-snow/65">
-          The mystery is for you too. Pick someone else from the Home page.
+          Pick someone else from the Home page.
         </p>
         <Link
           href="/family"
@@ -111,21 +119,53 @@ export default async function PickerPage({ params, searchParams }: PickerPagePro
     notFound();
   }
 
-  // Keep the visit in the URL so a refresh (or the live update below) reuses
-  // the same shuffled numbers and peeks.
-  if (visitParam !== visit.id) {
-    redirect(`/pick/${recipient.id}?visit=${visit.id}`);
+  const boxesEnabled = viewer.family.mysteryBoxes;
+  const wantsList = !boxesEnabled || viewParam === 'list';
+  const canonical = new URLSearchParams({ visit: visit.id });
+
+  if (wantsList) {
+    canonical.set('view', 'list');
+  } else if (viewParam === 'boxes') {
+    canonical.set('view', 'boxes');
   }
 
-  const grid = await getPickerGridView(visit, viewer.event.id);
-  const allTaken = grid.totalCount > 0 && grid.availableCount === 0;
+  // Keep the visit and view in the URL so refresh, links and the back button
+  // land on the same board.
+  if (
+    visitParam !== visit.id ||
+    (wantsList && viewParam !== 'list') ||
+    (!wantsList && viewParam !== undefined && viewParam !== 'boxes')
+  ) {
+    redirect(`/pick/${recipient.id}?${canonical.toString()}`);
+  }
+
+  const list = wantsList
+    ? await getPickerListView(recipient.id, viewer.event.id)
+    : null;
+  const grid = wantsList ? null : await getPickerGridView(visit, viewer.event.id);
+  const active = list ?? grid;
+
+  if (!active) {
+    notFound();
+  }
+
+  const allTaken = active.totalCount > 0 && active.availableCount === 0;
+  const boxesHref = `/pick/${recipient.id}?${new URLSearchParams({
+    visit: visit.id,
+    view: 'boxes',
+  }).toString()}`;
+  const listHref = `/pick/${recipient.id}?${new URLSearchParams({
+    visit: visit.id,
+    view: 'list',
+  }).toString()}`;
+  const hasExplicitView = viewParam === 'boxes' || viewParam === 'list';
 
   return (
     <div className="theme-dark min-h-screen bg-pine-900 text-snow">
       <PickerAutoRefresh
         memberId={recipient.id}
-        initialTotal={grid.totalCount}
-        initialAvailable={grid.availableCount}
+        initialTotal={active.totalCount}
+        initialAvailable={active.availableCount}
       />
       <div className="snow-dots relative isolate min-h-screen">
         <Snowfall />
@@ -163,31 +203,53 @@ export default async function PickerPage({ params, searchParams }: PickerPagePro
               </span>
 
               <h1 className="mt-6 text-5xl font-extrabold leading-[0.95] tracking-[-0.04em] sm:text-6xl">
-                Pick a <span className="text-gold">number</span>
+                {wantsList ? (
+                  <>
+                    {recipient.displayName}&apos;s{' '}
+                    <span className="text-gold">wishes</span>
+                  </>
+                ) : (
+                  <>
+                    Pick a <span className="text-gold">number</span>
+                  </>
+                )}
               </h1>
               <p className="mt-4 max-w-md text-base leading-relaxed text-snow/70">
-                Each one hides a wish from {recipient.displayName}&apos;s list. Peeking
-                doesn&apos;t reserve it, so open as many as you like.
+                {wantsList
+                  ? `Everything on ${recipient.displayName}'s list. Buy one when you're sure, and nobody else can pick it.`
+                  : `Each box hides a wish from ${recipient.displayName}'s list. You can see the price, the gift is a surprise.`}
               </p>
 
-              <div className="mt-6 hidden items-center gap-4 text-xs font-semibold text-snow/60 lg:flex">
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="h-3.5 w-3.5 rounded-[4px] bg-cranberry" />
-                  Mystery
-                </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="h-3.5 w-3.5 rounded-[4px] border border-gold/70" />
-                  Peeked
-                </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="h-3.5 w-3.5 rounded-[4px] border border-dashed border-snow/30" />
-                  Taken
-                </span>
+              <div className="mt-6">
+                <PickerViewSwitch
+                  view={wantsList ? 'list' : 'boxes'}
+                  boxesHref={boxesHref}
+                  listHref={listHref}
+                  hasExplicitView={hasExplicitView}
+                  enabled={boxesEnabled}
+                />
               </div>
+
+              {wantsList ? null : (
+                <div className="mt-6 hidden items-center gap-4 text-xs font-semibold text-snow/60 lg:flex">
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="h-3.5 w-3.5 rounded-[4px] bg-cranberry" />
+                    Mystery
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="h-3.5 w-3.5 rounded-[4px] border border-gold/70" />
+                    Peeked
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="h-3.5 w-3.5 rounded-[4px] border border-dashed border-snow/30" />
+                    Taken
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="mt-8 lg:mt-0">
-              {grid.totalCount === 0 ? (
+              {active.totalCount === 0 ? (
                 <div className="rounded-3xl border border-snow/15 bg-snow/[0.06] p-6 sm:p-8">
                   <h2 className="text-2xl font-extrabold tracking-tight">
                     No gifts on {recipient.displayName}&apos;s list yet
@@ -203,7 +265,69 @@ export default async function PickerPage({ params, searchParams }: PickerPagePro
                     Buy for someone else
                   </Link>
                 </div>
-              ) : (
+              ) : wantsList && list ? (
+                <>
+                  <div className="flex flex-wrap items-baseline justify-between gap-3">
+                    <p className="text-sm text-snow/65">
+                      {list.availableCount} of {list.totalCount} still available
+                    </p>
+                    <p className="text-sm font-semibold text-gold">
+                      Sort: price low to high
+                    </p>
+                  </div>
+
+                  <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+                    {list.items.map((gift) => {
+                      const price = formatPrice(gift.pricePence, gift.currency);
+
+                      return (
+                        <li
+                          key={gift.id}
+                          className={`flex items-center gap-3 rounded-2xl border p-3 ${
+                            gift.taken
+                              ? 'border-dashed border-snow/25 bg-pine-900/30 opacity-60'
+                              : 'border-snow/15 bg-snow/[0.06]'
+                          }`}
+                        >
+                          <GiftThumbnail
+                            giftId={gift.id}
+                            imageUrl={gift.imageUrl}
+                            className="h-16 w-16"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p
+                              className={`line-clamp-2 text-base font-extrabold leading-snug ${
+                                gift.taken ? 'text-snow/60' : 'text-snow'
+                              }`}
+                            >
+                              {gift.name}
+                            </p>
+                            <p className="mt-0.5 text-sm text-snow/60">
+                              {price ?? 'No price'}
+                              {gift.shopName ? ` · ${gift.shopName}` : ''}
+                            </p>
+                            {gift.priority ? (
+                              <p className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-gold">
+                                <StarIcon className="h-3 w-3" />
+                                Really wants this
+                              </p>
+                            ) : null}
+                          </div>
+
+                          {gift.taken ? (
+                            <span className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border border-dashed border-snow/30 px-3 text-sm font-semibold text-snow/60">
+                              <CheckIcon className="h-4 w-4" />
+                              Taken
+                            </span>
+                          ) : (
+                            <ListBuyButton giftId={gift.id} shopUrl={gift.shopUrl} />
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </>
+              ) : grid ? (
                 <>
                   {allTaken ? (
                     <div className="mb-5 rounded-2xl border border-gold/40 bg-gold/10 p-5 sm:p-6">
@@ -223,6 +347,8 @@ export default async function PickerPage({ params, searchParams }: PickerPagePro
                         <MysteryTile
                           number={box.number}
                           state={box.state}
+                          pricePence={box.pricePence}
+                          currency={box.currency}
                           visitId={visit.id}
                           href={
                             box.state === 'taken'
@@ -248,7 +374,7 @@ export default async function PickerPage({ params, searchParams }: PickerPagePro
                     </p>
                   )}
                 </>
-              )}
+              ) : null}
             </div>
           </main>
         </div>

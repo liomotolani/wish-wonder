@@ -3,14 +3,19 @@ import { createAdminClient } from '@/lib/db/client';
 import { DEFAULT_CURRENCY, isCurrencyCode } from '@/lib/currencies';
 import { shuffleGiftIds } from '@/lib/picker-shuffle';
 import { createPickerSeed } from '@/lib/tokens';
+import { PRIORITY_REALLY_WANT } from '@/lib/validation';
+import type { CurrencyCode } from '@/lib/currencies';
 import type {
   ClaimResult,
   MysteryBoxView,
   PickerGridView,
+  PickerListItemView,
+  PickerListView,
   RevealResult,
   RevealedGiftView,
   Viewer,
 } from '@/lib/types';
+import { shopNameFromUrl } from '@/lib/shop';
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -207,6 +212,7 @@ export async function getPickerVisitForBuyer(
 interface OrderedPickerGifts {
   orderedGiftIds: string[];
   activeClaimGiftIds: Set<string>;
+  priceByGiftId: Map<string, { pricePence: number | null; currency: CurrencyCode }>;
 }
 
 async function getOrderedPickerGifts(
@@ -217,7 +223,7 @@ async function getOrderedPickerGifts(
   const supabase = createAdminClient();
   const { data: gifts, error: giftError } = await supabase
     .from('gifts')
-    .select('id, created_at')
+    .select('id, created_at, currency, price_pence')
     .eq('owner_member_id', recipientMemberId)
     .eq('event_id', eventId)
     .order('created_at', { ascending: true })
@@ -230,7 +236,11 @@ async function getOrderedPickerGifts(
   const giftIds = (gifts ?? []).map((gift) => gift.id);
 
   if (giftIds.length === 0) {
-    return { orderedGiftIds: [], activeClaimGiftIds: new Set() };
+    return {
+      orderedGiftIds: [],
+      activeClaimGiftIds: new Set(),
+      priceByGiftId: new Map(),
+    };
   }
 
   const { data: claims, error: claimError } = await supabase
@@ -243,9 +253,20 @@ async function getOrderedPickerGifts(
     throw claimError;
   }
 
+  const priceByGiftId = new Map(
+    (gifts ?? []).map((gift) => [
+      gift.id,
+      {
+        pricePence: gift.price_pence,
+        currency: isCurrencyCode(gift.currency) ? gift.currency : DEFAULT_CURRENCY,
+      },
+    ]),
+  );
+
   return {
     orderedGiftIds: shuffleGiftIds(giftIds, seed),
     activeClaimGiftIds: new Set((claims ?? []).map((claim) => claim.gift_id)),
+    priceByGiftId,
   };
 }
 
@@ -253,21 +274,27 @@ export async function getPickerGridView(
   visit: PickerVisitView,
   eventId: string,
 ): Promise<PickerGridView> {
-  const { orderedGiftIds, activeClaimGiftIds } = await getOrderedPickerGifts(
-    visit.recipientMemberId,
-    eventId,
-    visit.seed,
-  );
+  const { orderedGiftIds, activeClaimGiftIds, priceByGiftId } =
+    await getOrderedPickerGifts(visit.recipientMemberId, eventId, visit.seed);
   const peeked = new Set(visit.peekedGiftIds);
 
   const boxes: MysteryBoxView[] = orderedGiftIds.map((giftId, index) => {
+    const price = priceByGiftId.get(giftId);
+
     if (activeClaimGiftIds.has(giftId)) {
-      return { number: index + 1, state: 'taken' };
+      return {
+        number: index + 1,
+        state: 'taken',
+        pricePence: null,
+        currency: price?.currency ?? DEFAULT_CURRENCY,
+      };
     }
 
     return {
       number: index + 1,
       state: peeked.has(giftId) ? 'peeked' : 'mystery',
+      pricePence: price?.pricePence ?? null,
+      currency: price?.currency ?? DEFAULT_CURRENCY,
     };
   });
 
@@ -276,6 +303,103 @@ export async function getPickerGridView(
     totalCount: orderedGiftIds.length,
     availableCount: orderedGiftIds.length - activeClaimGiftIds.size,
   };
+}
+
+/** The full list for List view. No claimer or claim fields are fetched. */
+export async function getPickerListView(
+  recipientMemberId: string,
+  eventId: string,
+): Promise<PickerListView> {
+  const supabase = createAdminClient();
+  const { data: gifts, error } = await supabase
+    .from('gifts')
+    .select('id, name, image_url, currency, price_pence, shop_url, priority')
+    .eq('owner_member_id', recipientMemberId)
+    .eq('event_id', eventId);
+
+  if (error) {
+    throw error;
+  }
+
+  const rows = gifts ?? [];
+  const giftIds = rows.map((gift) => gift.id);
+  const taken = new Set<string>();
+
+  if (giftIds.length > 0) {
+    const { data: claims, error: claimError } = await supabase
+      .from('claims')
+      .select('gift_id')
+      .in('gift_id', giftIds)
+      .in('status', ['reserved', 'purchased']);
+
+    if (claimError) {
+      throw claimError;
+    }
+
+    for (const claim of claims ?? []) {
+      taken.add(claim.gift_id);
+    }
+  }
+
+  const items: PickerListItemView[] = rows.map((gift) => ({
+    id: gift.id,
+    name: gift.name,
+    imageUrl: gift.image_url,
+    pricePence: gift.price_pence,
+    currency: isCurrencyCode(gift.currency) ? gift.currency : DEFAULT_CURRENCY,
+    shopName: shopNameFromUrl(gift.shop_url),
+    shopUrl: gift.shop_url,
+    priority: gift.priority === PRIORITY_REALLY_WANT,
+    taken: taken.has(gift.id),
+  }));
+
+  items.sort((first, second) => {
+    if (first.pricePence === null && second.pricePence !== null) {
+      return 1;
+    }
+
+    if (first.pricePence !== null && second.pricePence === null) {
+      return -1;
+    }
+
+    if (
+      first.pricePence !== null &&
+      second.pricePence !== null &&
+      first.pricePence !== second.pricePence
+    ) {
+      return first.pricePence - second.pricePence;
+    }
+
+    return first.name.localeCompare(second.name);
+  });
+
+  return {
+    items,
+    totalCount: items.length,
+    availableCount: items.filter((item) => !item.taken).length,
+  };
+}
+
+/** One gift for the list's no-animation details screen. */
+export async function getPickerGiftDetail(
+  giftId: string,
+  recipientMemberId: string,
+  eventId: string,
+): Promise<RevealedGiftView | null> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from('gifts')
+    .select('id, name, description, image_url, currency, price_pence, shop_url, preferences, priority')
+    .eq('id', giftId)
+    .eq('owner_member_id', recipientMemberId)
+    .eq('event_id', eventId)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return data ? toRevealedGift(data) : null;
 }
 
 async function markBoxPeeked(visit: PickerVisitView, giftId: string): Promise<void> {
@@ -419,6 +543,88 @@ export async function claimFromVisit(
   }
 
   if (!gift) {
+    return { ok: false, reason: 'not_found' };
+  }
+
+  const snapshot = {
+    name: gift.name,
+    description: gift.description,
+    image_url: gift.image_url,
+    currency: gift.currency,
+    price_pence: gift.price_pence,
+    shop_url: gift.shop_url,
+    preferences: gift.preferences,
+    priority: gift.priority,
+  };
+
+  const { data, error } = await supabase.rpc('claim_gift', {
+    p_gift_id: giftId,
+    p_claimer_member_id: viewer.member.id,
+    p_family_id: viewer.family.id,
+    p_snapshot: snapshot,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  if (data === 'ok') {
+    return { ok: true };
+  }
+
+  if (data === 'already_picked') {
+    return { ok: false, reason: 'already_picked' };
+  }
+
+  return { ok: false, reason: data === 'not_found' ? 'not_found' : 'not_allowed' };
+}
+
+/**
+ * Claim a gift directly from List view. The gift is scoped to the viewer's
+ * active event and family, and the database still makes the atomic check.
+ */
+export async function claimFromGiftId(
+  viewer: Viewer,
+  giftId: string,
+  eventId: string,
+): Promise<ClaimResult> {
+  if (!UUID_PATTERN.test(giftId)) {
+    return { ok: false, reason: 'not_found' };
+  }
+
+  const supabase = createAdminClient();
+  const { data: gift, error: giftError } = await supabase
+    .from('gifts')
+    .select(
+      'owner_member_id, name, description, image_url, currency, price_pence, shop_url, preferences, priority',
+    )
+    .eq('id', giftId)
+    .eq('event_id', eventId)
+    .maybeSingle();
+
+  if (giftError) {
+    throw giftError;
+  }
+
+  if (!gift) {
+    return { ok: false, reason: 'not_found' };
+  }
+
+  if (gift.owner_member_id === viewer.member.id) {
+    return { ok: false, reason: 'not_allowed' };
+  }
+
+  const { data: owner, error: ownerError } = await supabase
+    .from('members')
+    .select('family_id')
+    .eq('id', gift.owner_member_id)
+    .maybeSingle();
+
+  if (ownerError) {
+    throw ownerError;
+  }
+
+  if (!owner || owner.family_id !== viewer.family.id) {
     return { ok: false, reason: 'not_found' };
   }
 

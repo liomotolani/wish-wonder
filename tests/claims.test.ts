@@ -61,7 +61,12 @@ describe('claims and overlapping actions', () => {
     }
 
     const grid = await getPickerGridView(refreshedVisit, family.eventId);
-    expect(grid.boxes[0]).toEqual({ number: 1, state: 'peeked' });
+    expect(grid.boxes[0]).toEqual({
+      number: 1,
+      state: 'peeked',
+      pricePence: 9500,
+      currency: 'GBP',
+    });
   });
 
   it('refuses a claim before the number has been revealed', async () => {
@@ -124,7 +129,12 @@ describe('claims and overlapping actions', () => {
 
     const grid = await getPickerGridView(refreshedVisit, family.eventId);
     expect(grid.availableCount).toBe(0);
-    expect(grid.boxes[0]).toEqual({ number: 1, state: 'taken' });
+    expect(grid.boxes[0]).toEqual({
+      number: 1,
+      state: 'taken',
+      pricePence: null,
+      currency: 'GBP',
+    });
   });
 
   it('keeps one active claim per gift under two simultaneous claims', async () => {

@@ -119,8 +119,11 @@ All requirements below are in scope for v1 unless marked otherwise.
 | --- | --- |
 | FR-20 | The family dashboard lists every member with a **Pick a Gift** button, except the current member. |
 | FR-21 | The picker shows one numbered box per gift on that recipient's list. Claimed gifts stay in the grid as opened "Taken" boxes. A Taken box shows no gift details or buyer and cannot be claimed. |
+| FR-21a | Each closed or Peeked box shows the gift's estimated price, for example "£25", so buyers can stay within budget while the gift stays a surprise. A gift with no price shows "No price". Taken boxes show no price. |
+| FR-21b | A **Boxes / List** switch sits at the top of the picker. Boxes is the default. The device remembers the buyer's last choice. |
+| FR-21c | **List view** shows every gift on the recipient's list with its name, photo, estimated price, shop and priority, sorted by price from low to high (gifts with no price last), plus a count of how many are still available. Each available gift has a **Claim** button that opens its details with **I'll Buy This**. Claimed gifts stay in the list, faded and marked "Taken", with no buyer shown. |
 | FR-22 | Numbers are randomly assigned to gifts for each shopper, rather than one fixed numbered list for the whole family. The numbers reshuffle on every visit. |
-| FR-23 | Opening a box plays a short reveal animation and shows the gift's details. Proposed: the server sends only the revealed gift, never the whole list. |
+| FR-23 | Opening a box plays a short reveal animation and shows the gift's details. In Boxes view the server sends only box numbers, prices and states, then only the gift that was opened. The full list is sent only for List view. |
 | FR-24 | Revealing a gift does not reserve it. The buyer can reveal as many boxes, and claim as many gifts, as they want. There is no limit per recipient. Boxes the buyer has already opened this visit show as "Peeked" and can be opened again. |
 | FR-25 | After a reveal the buyer chooses **I'll Buy This** or **Try Another Number**. |
 | FR-26 | A claim is accepted only if the gift is still available, checked by the server in one transaction. |
@@ -148,6 +151,7 @@ All requirements below are in scope for v1 unless marked otherwise.
 | FR-43 | Create a new Christmas event. |
 | FR-44 | Close or archive an old event. |
 | FR-45 | The organiser does not automatically get access to anyone's secret purchases. |
+| FR-46 | **Mystery boxes on or off** for the whole group (on by default). When off, the picker opens straight to List view and the Boxes / List switch is hidden. |
 
 ## Privacy, identity and security
 
@@ -157,8 +161,8 @@ Surprise protection is enforced on the server: the recipient's browser never rec
 
 | Data | Recipient | Other buyers | Claimer | Organiser |
 | --- | --- | --- | --- | --- |
-| Recipient's gift details | Yes (own list) | Only gifts they reveal | Snapshot of claimed gift | Only gifts they reveal |
-| Whether a gift is claimed | No | Sees which numbers are Taken, not what or by whom | Yes, for own claims | No |
+| Recipient's gift details | Yes (own list) | Prices on every box; full details of gifts they reveal, or of every gift in List view | Snapshot of claimed gift | Same as other buyers |
+| Whether a gift is claimed | No | Sees which boxes or list items are Taken, not by whom | Yes, for own claims | Same as other buyers when buying |
 | Who claimed a gift | No | No | Yes, themselves | No |
 | Purchased status | No | No | Yes | No |
 | Member names | Yes | Yes | Yes | Yes |
@@ -208,7 +212,7 @@ The entities come from the brief; the columns are a proposal.
 
 | Table | Key columns |
 | --- | --- |
-| `families` | id, name, group\_type (family, friends, colleagues, other; existing rows default to family), invite\_code, organiser\_member\_id, requires\_approval, created\_at. Called "group" in the UI. |
+| `families` | id, name, group\_type (family, friends, colleagues, other; existing rows default to family), invite\_code, organiser\_member\_id, requires\_approval, mystery\_boxes (default true), created\_at. Called "group" in the UI. |
 | `events` | id, family\_id, name (for example "Christmas 2026"), status (active, archived), created\_at |
 | `members` | id, family\_id, display\_name (unique per family), managed\_by\_member\_id (for people without a phone), status (pending, active), created\_at |
 | `member_sessions` | id, member\_id, token\_hash, created\_at, revoked\_at (one row per signed-in device) |
@@ -242,7 +246,8 @@ Proposed endpoints, not in the original brief:
 | `POST /api/me/device-link` | Create a one-time device link for FR-4a |
 | `GET /device/:token` | Use a device link: create a new session for this device, then go to the dashboard |
 | `GET/POST/PATCH/DELETE /api/gifts` | Manage own gifts; never returns claim fields |
-| `GET /api/picker/:memberId` | Number of mystery boxes for a recipient |
+| `GET /api/picker/:memberId` | Mystery boxes for a recipient: numbers, prices and Taken states only |
+| `GET /api/picker/:memberId/list` | List view: every gift for a recipient with a Taken flag, never who claimed it |
 | `POST /api/picker/:memberId/reveal` | Reveal one random available gift |
 | `POST /api/claims` | Claim a gift |
 | `GET /api/claims/mine` | My Secret Gifts |
@@ -270,7 +275,7 @@ Six pages, designed mobile first for a link opened from WhatsApp, warm and festi
 | Welcome | Explain the idea and start | The three main actions (create your wishlist, reveal mystery gifts, surprise your loved ones), **Start a group**, **Join a group** |
 | Dashboard | Home screen | Group switcher, group name, Christmas countdown, family members with **Pick a Gift**, add or invite members, My Wishlist, My Secret Gifts, the invite button (wording by group type) |
 | My Wishlist | Manage own gifts | Add, edit, remove; product URL, photo, estimated price, preferences or notes. No claim status. |
-| Mystery Gift Picker | The signature page | Recipient's name, numbered mystery gifts, opening animation, gift details, **I'll Buy This**, **Try Another Number**, clear unavailable messages |
+| Mystery Gift Picker | The signature page | Recipient's name, **Boxes / List** switch, numbered mystery gifts with prices, opening animation, list of gifts with **Claim**, gift details, **I'll Buy This**, **Try Another Number**, clear unavailable messages |
 | My Secret Gifts | Track claims | Everything the member has claimed with status, product information, shop link, **Mark Purchased**, **Release** |
 | Use on Another Device | Sign in a second device | One-time link and QR code, a 15-minute countdown, **Copy link**, and a note that it works once |
 | Group Settings | Organiser only | Edit group name and type, copy invite link, manage membership, approve members if enabled, create a new event, close or archive an old one |
@@ -344,6 +349,8 @@ Only after the core Christmas experience works reliably: gift budgets, "Most Wan
 | Lists for people without a phone | Yes, any member can add and manage one (FR-6) |
 | Limit on claims per recipient | No limit (FR-24) |
 | Number-to-gift mapping | Reshuffles on every visit (FR-22) |
+| Buyers who prefer a list | Boxes show prices, and a Boxes / List switch offers a full list; Boxes is the default (FR-21a to FR-21c) |
+| Turning boxes off | The organiser can switch mystery boxes off for the whole group (FR-46) |
 | Released claims | Disappear from My Secret Gifts (FR-30) |
 | Group types | Family, Friends, Colleagues, Something else; chosen at creation, changeable by the organiser (FR-1, FR-40) |
 | Several groups on one device | Yes, with a group switcher (FR-1b) |

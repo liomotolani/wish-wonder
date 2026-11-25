@@ -19,6 +19,11 @@ export default async function RevealPage({ params, searchParams }: RevealPagePro
   const wording = groupWording(viewer.family.groupType);
 
   const { memberId, number: numberParam } = await params;
+
+  if (!viewer.family.mysteryBoxes) {
+    redirect(`/pick/${memberId}?view=list`);
+  }
+
   const search = await searchParams;
   const visitId = typeof search.visit === 'string' ? search.visit : '';
   const number = Number(numberParam);

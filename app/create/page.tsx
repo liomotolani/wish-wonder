@@ -9,9 +9,16 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function CreateFamilyPage() {
+export default async function CreateFamilyPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ picker?: string | string[] }>;
+}) {
   const viewer = await getViewer();
   const isFirstGroup = viewer === null;
+  const params = await searchParams;
+  const defaultPickerStyle =
+    params.picker === 'list' ? 'list' : params.picker === 'boxes' ? 'boxes' : undefined;
 
   return (
     <div className="theme-dark min-h-screen bg-pine-900 text-snow">
@@ -55,7 +62,10 @@ export default async function CreateFamilyPage() {
             </div>
 
             <div className="mt-8 lg:mt-0 lg:rounded-3xl lg:bg-white lg:p-8 lg:text-ink lg:shadow-2xl">
-              <CreateFamilyForm defaultMemberName={viewer?.member.displayName} />
+              <CreateFamilyForm
+                defaultMemberName={viewer?.member.displayName}
+                defaultPickerStyle={defaultPickerStyle}
+              />
             </div>
           </main>
         </div>

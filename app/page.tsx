@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Logo } from '@/app/_components/Logo';
 import { GiftCardsIllustration } from '@/app/_components/GiftCardsIllustration';
+import { LandingPickerShowcase } from '@/app/_components/LandingPickerShowcase';
 import { Snowfall } from '@/app/_components/motion';
 import { ArrowRightIcon, GiftIcon, LockIcon, StarIcon } from '@/app/_components/icons';
 import { getViewer } from '@/lib/session';
@@ -53,14 +54,7 @@ export default async function Home() {
                 <span className="truncate">Continue to {viewer.family.name}</span>
                 <ArrowRightIcon className="h-4 w-4 shrink-0" />
               </Link>
-            ) : (
-              <Link
-                href="/join"
-                className="hidden min-h-11 items-center rounded-full border border-snow/25 px-5 text-sm font-bold text-snow transition-colors hover:bg-snow/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold sm:inline-flex"
-              >
-                I have an invite link
-              </Link>
-            )}
+            ) : null}
           </div>
         </header>
 
@@ -98,6 +92,8 @@ export default async function Home() {
               <GiftCardsIllustration className="lg:scale-110" />
             </div>
           </div>
+
+          <LandingPickerShowcase />
 
           <ul className="mt-16 hidden gap-4 pb-4 sm:grid sm:grid-cols-3 lg:mt-20">
             {STEPS.map((step) => (
